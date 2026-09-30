@@ -4,15 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>README Badge Generator</title>
-<meta name="description" content="Интерактивный генератор бейджей shields.io для README на GitHub">
+<meta name="description" content="Интерактивный генератор бейджей shields.io для README на GitHub: статические и динамические бейджи, наборы, каталог иконок, экспорт в Markdown / HTML / reST / AsciiDoc.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 16l5 5 11-11' stroke='white' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg: #f5f6f8;
+    --bg: #f3f5f9;
     --fg: #1f2328;
-    --muted: #6a737d;
+    --muted: #667085;
     --card: #ffffff;
     --accent: #2563eb;
+    --accent2: #7c3aed;
     --accent-fg: #ffffff;
     --border: #d8dce2;
     --input-bg: #ffffff;
@@ -20,130 +21,164 @@
     --shadow: 0 2px 10px rgba(20, 30, 50, .08);
     --stage-light: #ffffff;
     --stage-dark: #0d1117;
+    --soft: #eef2ff;
     --radius: 8px;
   }
   [data-theme="dark"] {
-    --bg: #0f1216;
+    --bg: #0d1014;
     --fg: #e6e9ee;
     --muted: #9aa4b2;
-    --card: #181c22;
+    --card: #171b21;
     --accent: #5b9dff;
+    --accent2: #a78bfa;
     --accent-fg: #0b1220;
     --border: #2d343d;
     --input-bg: #11151a;
     --danger: #ff7b72;
     --shadow: 0 2px 12px rgba(0, 0, 0, .45);
+    --soft: #1c2433;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { color-scheme: light; }
   [data-theme="dark"] { color-scheme: dark; }
   body {
     margin: 0;
     background: var(--bg);
+    background-image: radial-gradient(900px 300px at 10% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent),
+                      radial-gradient(800px 300px at 100% -10%, color-mix(in srgb, var(--accent2) 12%, transparent), transparent);
+    background-repeat: no-repeat;
     color: var(--fg);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    transition: background .2s, color .2s;
+    transition: background-color .2s, color .2s;
   }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
-  header {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    margin-bottom: 16px;
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  header h1 {
+    font-size: 1.4rem; margin: 0; overflow-wrap: anywhere;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  header h1 { font-size: 1.3rem; margin: 0; overflow-wrap: anywhere; }
   header p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+  .hbtns { display: flex; gap: 8px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .col { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
   .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-    min-width: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; min-width: 0;
   }
   .card h2 { font-size: 1rem; margin: 0 0 12px; }
-  .card + .card { margin-top: 16px; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .card-head h2 { margin: 0; }
   .field { margin-bottom: 12px; min-width: 0; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   label.lbl { display: block; font-size: .8rem; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
   input[type=text], input[type=url], select {
-    width: 100%; min-width: 0;
-    padding: 8px 10px;
-    font: inherit;
-    color: var(--fg);
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    width: 100%; min-width: 0; padding: 8px 10px; font: inherit; color: var(--fg);
+    background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius);
   }
   input.invalid { border-color: var(--danger); }
-  input:focus-visible, select:focus-visible, button:focus-visible, [role=tab]:focus-visible {
+  input:focus-visible, select:focus-visible, button:focus-visible, [role=tab]:focus-visible, pre:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 1px;
   }
   .color { display: flex; gap: 6px; align-items: stretch; }
   .color input[type=color] {
-    flex: 0 0 42px; width: 42px; padding: 2px; height: auto;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--input-bg); cursor: pointer;
+    flex: 0 0 42px; width: 42px; padding: 2px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--input-bg); cursor: pointer;
   }
-  .color input[type=text] { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .color input[type=text], code, pre.code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   .hint { font-size: .75rem; color: var(--muted); margin-top: 3px; }
   .btns { display: flex; flex-wrap: wrap; gap: 8px; }
   button {
-    font: inherit; cursor: pointer;
-    padding: 7px 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--input-bg);
-    color: var(--fg);
-    transition: background .15s, border-color .15s;
+    font: inherit; cursor: pointer; padding: 7px 12px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--input-bg); color: var(--fg);
+    transition: background .15s, border-color .15s, transform .1s;
   }
-  button:hover { border-color: var(--accent); }
-  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
-  button.primary:hover { filter: brightness(1.08); }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: linear-gradient(90deg, var(--accent), var(--accent2)); color: #fff; border-color: transparent; font-weight: 600; }
+  button.primary:hover:not(:disabled) { filter: brightness(1.08); }
   button.small { padding: 4px 10px; font-size: .8rem; }
+  button.chip { padding: 5px 10px; font-size: .85rem; border-radius: 999px; }
   .sep { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--input-bg); max-width: 100%; }
+  .seg button { border: 0; border-radius: 0; background: transparent; padding: 6px 14px; color: var(--muted); font-weight: 600; }
+  .seg button[aria-pressed=true] { background: var(--accent); color: var(--accent-fg); }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .inline { display: flex; gap: 6px; align-items: stretch; }
+  .inline > input { flex: 1; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .sw { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid var(--card); box-shadow: 0 0 0 1px var(--border); }
+  .sw:hover:not(:disabled) { transform: scale(1.15); }
+  .check { display: flex; gap: 6px; align-items: center; font-size: .85rem; margin-bottom: 8px; }
+  .picker {
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; margin-bottom: 12px; background: var(--input-bg);
+  }
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; max-height: 210px; overflow: auto; margin-top: 8px; }
+  .icons button { padding: 6px; height: 44px; display: flex; align-items: center; justify-content: center; background: var(--card); }
+  .icons img { width: 22px; height: 22px; }
+  .icons button[hidden] { display: none; }
   .stage {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 84px; padding: 16px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    overflow: auto; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: center; min-height: 84px; padding: 16px;
+    border: 1px solid var(--border); border-radius: var(--radius); overflow: auto; margin-bottom: 10px;
   }
   .stage.light { background: var(--stage-light); }
   .stage.dark { background: var(--stage-dark); }
-  .stage .tag { position: absolute; }
-  .stage img { max-width: none; }
-  .fallback {
-    font-size: .85rem; padding: 4px 10px; border-radius: 6px;
-    background: #fff3cd; color: #7a5b00; border: 1px solid #ecd58a;
-  }
+  .fallback { font-size: .85rem; padding: 4px 10px; border-radius: 6px; background: #fff3cd; color: #7a5b00; border: 1px solid #ecd58a; }
   .stage-label { font-size: .72rem; color: var(--muted); margin: 0 0 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .zoom { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); }
+  .zoom input { width: 110px; accent-color: var(--accent); }
   [role=tablist] { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; flex-wrap: wrap; }
   [role=tab] {
     border: 1px solid transparent; border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0;
-    background: transparent; padding: 6px 14px; color: var(--muted); font-weight: 600;
+    background: transparent; padding: 6px 12px; color: var(--muted); font-weight: 600;
   }
   [role=tab][aria-selected=true] { background: var(--input-bg); border-color: var(--border); color: var(--accent); }
-  .code-box { position: relative; }
   pre.code {
-    margin: 0; padding: 12px; padding-right: 12px;
-    background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius);
-    font: .82rem/1.5 ui-monospace, Menlo, Consolas, monospace;
-    white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all;
-    min-height: 60px; max-height: 240px; overflow: auto;
+    margin: 0; padding: 12px; background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: .82rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all;
+    min-height: 60px; max-height: 260px; overflow: auto; cursor: copy;
   }
   .code-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-  .wrapopt { font-size: .85rem; display: flex; gap: 6px; align-items: center; }
-  .wrapopt[hidden] { display: none; }
+  .code-actions .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  a.btnlink {
+    font-size: .85rem; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--fg); text-decoration: none; background: var(--input-bg);
+  }
+  a.btnlink:hover { border-color: var(--accent); }
+  .opts { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .opts label { font-size: .85rem; display: flex; gap: 6px; align-items: center; }
+  .opts select { width: auto; padding: 4px 8px; }
+  .board { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; min-height: 40px; }
+  .bchip {
+    display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--input-bg); max-width: 100%; cursor: pointer;
+  }
+  .bchip.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .bchip.over { border-style: dashed; border-color: var(--accent2); }
+  .bchip img { display: block; max-width: 100%; }
+  .bchip .mini { display: flex; flex-direction: column; gap: 2px; }
+  .bchip .mini button { padding: 0 5px; font-size: .65rem; line-height: 1.3; border-radius: 4px; }
+  .mock {
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; overflow: auto;
+    background: #fff; color: #1f2328; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif;
+  }
+  .mock.dark { background: #0d1117; color: #e6edf3; border-color: #30363d; }
+  .mock h3 { margin: 0 0 4px; padding-bottom: 6px; font-size: 1.5rem; border-bottom: 1px solid #d0d7de; }
+  .mock.dark h3 { border-color: #30363d; }
+  .mock p { margin: 8px 0; }
+  .mock .bs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 8px 0; }
+  .mock .bs.column { flex-direction: column; align-items: flex-start; }
+  .mock .bs.center { justify-content: center; }
   .history { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
   .history li { min-width: 0; }
-  .history button {
-    width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-    text-align: left; padding: 8px 10px; min-width: 0;
-  }
+  .history button { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 8px 10px; min-width: 0; }
   .history .hi-img { min-height: 20px; max-width: 100%; overflow: hidden; }
   .history .hi-txt { font-size: .75rem; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .empty { color: var(--muted); font-size: .9rem; }
-  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
-  .card-head h2 { margin: 0; }
+  .empty { color: var(--muted); font-size: .9rem; margin: 0; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; margin: 18px 0 6px; }
+  kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: .75rem; background: var(--input-bg); }
   #toast {
     position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px);
     background: #1f2328; color: #fff; padding: 9px 18px; border-radius: var(--radius);
@@ -151,16 +186,14 @@
     transition: opacity .2s, transform .2s; z-index: 10; max-width: calc(100vw - 32px); text-align: center;
   }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-  @media (max-width: 800px) {
-    .grid { grid-template-columns: 1fr; }
-  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
   @media (max-width: 420px) {
     .wrap { padding: 10px; }
     .card { padding: 12px; }
     .row { grid-template-columns: 1fr; gap: 0; }
     header p { display: none; }
+    .seg button { padding: 6px 10px; }
   }
 </style>
 </head>
@@ -169,17 +202,28 @@
   <header>
     <div>
       <h1>🏷️ README Badge Generator</h1>
-      <p>Настройте бейдж shields.io и скопируйте код для README</p>
+      <p data-i18n="subtitle">Настройте бейдж shields.io и скопируйте код для README</p>
     </div>
-    <button id="themeBtn" type="button" aria-label="Переключить тему" title="Переключить тему">🌙 Тема</button>
+    <div class="hbtns">
+      <button id="langBtn" type="button" data-i18n-title="t_lang" title="Язык">EN</button>
+      <button id="themeBtn" type="button" data-i18n-title="t_theme" title="Тема">🌙</button>
+    </div>
   </header>
 
   <main class="grid">
-    <!-- ФОРМА -->
-    <section class="card" aria-label="Настройки бейджа">
-      <h2>Настройки</h2>
+    <!-- ================= ЛЕВАЯ КОЛОНКА: ФОРМА ================= -->
+    <div class="col">
+    <section class="card" aria-labelledby="h-settings">
+      <div class="card-head">
+        <h2 id="h-settings" data-i18n="settings">Настройки</h2>
+        <div class="seg" role="group" aria-label="Тип бейджа" id="kindSeg">
+          <button type="button" data-kind="static" aria-pressed="true" data-i18n="k_static">Статический</button>
+          <button type="button" data-kind="dynamic" aria-pressed="false" data-i18n="k_dynamic">Динамический</button>
+        </div>
+      </div>
       <form id="form" autocomplete="off" novalidate>
-        <div class="row">
+        <!-- статический -->
+        <div class="row" id="staticBox">
           <div class="field">
             <label class="lbl" for="label">Label</label>
             <input type="text" id="label" maxlength="100">
@@ -189,24 +233,45 @@
             <input type="text" id="message" maxlength="100">
           </div>
         </div>
+        <!-- динамический -->
+        <div id="dynBox" hidden>
+          <div class="field">
+            <label class="lbl" for="dyn" data-i18n="d_source">Источник данных</label>
+            <select id="dyn"></select>
+            <div class="hint" data-i18n="d_hint">Данные подтягивает сам shields.io при загрузке картинки — в коде остаётся обычный URL.</div>
+          </div>
+          <div class="row">
+            <div class="field" id="fp1"><label class="lbl" for="p1" id="lp1">p1</label><input type="text" id="p1" maxlength="120" spellcheck="false"></div>
+            <div class="field" id="fp2"><label class="lbl" for="p2" id="lp2">p2</label><input type="text" id="p2" maxlength="120" spellcheck="false"></div>
+          </div>
+          <div class="row">
+            <div class="field" id="fp3"><label class="lbl" for="p3" id="lp3">p3</label><input type="text" id="p3" maxlength="120" spellcheck="false"></div>
+            <div class="field">
+              <label class="lbl" for="dLabel" data-i18n="d_label">Свой label (необязательно)</label>
+              <input type="text" id="dLabel" maxlength="60">
+            </div>
+          </div>
+        </div>
 
         <div class="row">
           <div class="field">
             <label class="lbl" for="labelColor">Label Color</label>
             <div class="color">
-              <input type="color" id="labelColorPick" aria-label="Выбор цвета label">
+              <input type="color" id="labelColorPick" aria-label="Label color">
               <input type="text" id="labelColor" maxlength="30" spellcheck="false" placeholder="#555555">
             </div>
           </div>
           <div class="field">
             <label class="lbl" for="messageColor">Message Color</label>
             <div class="color">
-              <input type="color" id="messageColorPick" aria-label="Выбор цвета message">
+              <input type="color" id="messageColorPick" aria-label="Message color">
               <input type="text" id="messageColor" maxlength="30" spellcheck="false" placeholder="#4c1">
             </div>
           </div>
         </div>
-        <div class="hint" style="margin:-6px 0 12px">Hex (<code>#4c1</code>) или имя цвета (<code>blue</code>, <code>success</code>).</div>
+        <label class="check" id="colorOnRow" hidden><input type="checkbox" id="colorOn"> <span data-i18n="d_coloron">Переопределить цвет Message (иначе цвет по данным)</span></label>
+        <div class="swatches" id="swatches" role="group" aria-label="Цвета shields.io"></div>
+        <div class="hint" style="margin:4px 0 12px" data-i18n="color_hint">Hex (#4c1) или имя цвета (blue, success). Кружки задают Message Color.</div>
 
         <div class="row">
           <div class="field">
@@ -220,17 +285,32 @@
             </select>
           </div>
           <div class="field">
-            <label class="lbl" for="logo">Logo (Simple Icons slug)</label>
-            <input type="text" id="logo" list="logos" maxlength="60" spellcheck="false" placeholder="github">
+            <label class="lbl" for="logo" data-i18n="logo">Logo (Simple Icons slug)</label>
+            <div class="inline">
+              <input type="text" id="logo" list="logos" maxlength="60" spellcheck="false" placeholder="github">
+              <button type="button" id="iconBtn" class="small" data-i18n-title="t_catalog" title="Каталог иконок" aria-expanded="false" aria-controls="iconPanel">🔍</button>
+              <button type="button" id="brandBtn" class="small" data-i18n-title="t_brand" title="Фирменный цвет логотипа">🎨</button>
+            </div>
             <datalist id="logos"></datalist>
           </div>
         </div>
+        <div class="picker" id="iconPanel" hidden>
+          <input type="text" id="iconSearch" data-i18n-ph="icon_search" placeholder="Поиск иконки…" aria-label="Поиск иконки" spellcheck="false">
+          <div class="icons" id="icons"></div>
+          <div class="hint" data-i18n="icon_hint">Иконки загружаются с cdn.simpleicons.org; без сети можно вводить slug вручную.</div>
+        </div>
 
-        <div class="field">
-          <label class="lbl" for="logoColor">Logo Color</label>
-          <div class="color">
-            <input type="color" id="logoColorPick" aria-label="Выбор цвета логотипа">
-            <input type="text" id="logoColor" maxlength="30" spellcheck="false" placeholder="#ffffff">
+        <div class="row">
+          <div class="field">
+            <label class="lbl" for="logoColor">Logo Color</label>
+            <div class="color">
+              <input type="color" id="logoColorPick" aria-label="Logo color">
+              <input type="text" id="logoColor" maxlength="30" spellcheck="false" placeholder="#ffffff">
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl" for="alt" data-i18n="alt">Alt-текст (необязательно)</label>
+            <input type="text" id="alt" maxlength="120">
           </div>
         </div>
 
@@ -241,73 +321,214 @@
         <div class="field">
           <label class="lbl" for="messageLink">Message Link</label>
           <input type="url" id="messageLink" maxlength="500" placeholder="https://github.com/user/repo/actions" spellcheck="false">
-          <div class="hint">Допускаются только http(s)-ссылки. Если заданы обе, в обёртке используется Message Link.</div>
+          <div class="hint" data-i18n="link_hint">Допускаются только http(s)-ссылки. Если заданы обе, в обёртке используется Message Link.</div>
         </div>
       </form>
 
       <hr class="sep">
-      <h2>Пресеты</h2>
+      <h2 data-i18n="presets">Пресеты</h2>
       <div class="btns" id="presets"></div>
 
       <hr class="sep">
+      <h2 data-i18n="kits">Наборы в один клик</h2>
+      <div class="btns" id="kits"></div>
+      <div class="hint" data-i18n="kits_hint">Добавляют сразу несколько бейджей в «Набор».</div>
+
+      <hr class="sep">
       <div class="btns">
-        <button type="button" id="resetBtn">↺ Сброс</button>
-        <button type="button" id="shareBtn" class="primary">🔗 Скопировать ссылку</button>
-        <button type="button" id="saveBtn">💾 В историю</button>
+        <button type="button" id="resetBtn" data-i18n="reset">↺ Сброс</button>
+        <button type="button" id="randBtn" data-i18n="random">🎲 Случайный</button>
+        <button type="button" id="shareBtn" class="primary" data-i18n="share">🔗 Скопировать ссылку</button>
+        <button type="button" id="saveBtn" data-i18n="save">💾 В историю</button>
       </div>
     </section>
+    </div>
 
-    <!-- ПРЕВЬЮ + ЭКСПОРТ -->
-    <section aria-label="Превью и экспорт" style="min-width:0">
-      <div class="card">
-        <h2>Превью</h2>
-        <p class="stage-label">Светлый фон</p>
+    <!-- ================= ПРАВАЯ КОЛОНКА ================= -->
+    <div class="col">
+      <section class="card" aria-labelledby="h-prev">
+        <div class="card-head">
+          <h2 id="h-prev" data-i18n="preview">Превью</h2>
+          <label class="zoom"><span data-i18n="zoom">Масштаб</span> <input type="range" id="zoom" min="1" max="3" step="0.5" value="1" aria-label="Zoom"></label>
+        </div>
+        <p class="stage-label" data-i18n="bg_light">Светлый фон</p>
         <div class="stage light" id="stageLight" aria-live="polite"></div>
-        <p class="stage-label">Тёмный фон</p>
+        <p class="stage-label" data-i18n="bg_dark">Тёмный фон</p>
         <div class="stage dark" id="stageDark"></div>
-      </div>
+        <div class="btns">
+          <button type="button" id="addBtn" data-i18n="board_add">➕ В набор</button>
+          <button type="button" id="updBtn" data-i18n="board_upd" disabled>✏️ Обновить выбранный</button>
+        </div>
+      </section>
 
-      <div class="card">
-        <h2>Код</h2>
+      <section class="card" aria-labelledby="h-code">
+        <div class="card-head">
+          <h2 id="h-code" data-i18n="code">Код</h2>
+          <div class="seg" role="group" aria-label="Scope" id="scopeSeg">
+            <button type="button" data-scope="one" aria-pressed="true" data-i18n="scope_one">Текущий</button>
+            <button type="button" data-scope="board" aria-pressed="false" id="scopeBoard"><span data-i18n="scope_board">Весь набор</span> (<span id="scopeCnt">0</span>)</button>
+          </div>
+        </div>
         <div role="tablist" aria-label="Формат экспорта" id="tabs">
           <button role="tab" type="button" id="tab-md" data-tab="md" aria-selected="true" aria-controls="panel">Markdown</button>
           <button role="tab" type="button" id="tab-html" data-tab="html" aria-selected="false" aria-controls="panel" tabindex="-1">HTML</button>
           <button role="tab" type="button" id="tab-url" data-tab="url" aria-selected="false" aria-controls="panel" tabindex="-1">URL</button>
+          <button role="tab" type="button" id="tab-rst" data-tab="rst" aria-selected="false" aria-controls="panel" tabindex="-1">reST</button>
+          <button role="tab" type="button" id="tab-adoc" data-tab="adoc" aria-selected="false" aria-controls="panel" tabindex="-1">AsciiDoc</button>
         </div>
-        <div class="code-box" id="panel" role="tabpanel" aria-labelledby="tab-md">
-          <pre class="code" id="code" tabindex="0"></pre>
+        <div class="opts" id="layoutRow" hidden>
+          <label><span data-i18n="layout">Раскладка</span>
+            <select id="layout">
+              <option value="row" data-i18n="l_row">В строку</option>
+              <option value="column" data-i18n="l_col">Столбиком</option>
+              <option value="center" data-i18n="l_center">По центру (HTML)</option>
+            </select>
+          </label>
+        </div>
+        <div id="panel" role="tabpanel" aria-labelledby="tab-md">
+          <pre class="code" id="code" tabindex="0" data-i18n-title="t_clickcopy" title="Клик — скопировать"></pre>
         </div>
         <div class="code-actions">
-          <label class="wrapopt" id="wrapOpt" hidden>
-            <input type="checkbox" id="wrapLink" checked> Обернуть в ссылку
-          </label>
-          <button type="button" id="copyBtn" class="primary">📋 Copy</button>
+          <label class="check" id="wrapOpt" hidden style="margin:0"><input type="checkbox" id="wrapLink" checked> <span data-i18n="wrap">Обернуть в ссылку</span></label>
+          <div class="right">
+            <a class="btnlink" id="svgLink" target="_blank" rel="noopener noreferrer" href="#" data-i18n="open_svg">↗ Открыть SVG</a>
+            <button type="button" id="copyBtn" class="primary">📋 Copy</button>
+          </div>
         </div>
-      </div>
-    </section>
+        <div class="hint"><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> — <span data-i18n="shortcut">копировать</span></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-board">
+        <div class="card-head">
+          <h2 id="h-board" data-i18n="board">Набор бейджей</h2>
+          <button type="button" id="clearBoard" class="small" data-i18n="clear">Очистить</button>
+        </div>
+        <div class="board" id="board" aria-label="Набор"></div>
+        <p class="empty" id="boardEmpty" data-i18n="board_empty">Набор пуст. Нажмите «В набор» или выберите набор в один клик. Перетаскивайте бейджи, чтобы менять порядок.</p>
+        <hr class="sep">
+        <div class="card-head">
+          <h2 data-i18n="readme_prev">Как выглядит в README</h2>
+          <div class="seg" role="group" aria-label="README theme" id="mockSeg">
+            <button type="button" data-mock="light" aria-pressed="true">Light</button>
+            <button type="button" data-mock="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+        <div class="mock" id="mock">
+          <h3 id="mockTitle">my-project</h3>
+          <div class="bs" id="mockBadges"></div>
+          <p id="mockText">A short description of the project goes here.</p>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <section class="card" style="margin-top:16px" aria-label="История">
+  <section class="card" style="margin-top:16px" aria-labelledby="h-hist">
     <div class="card-head">
-      <h2>История (последние 10)</h2>
-      <button type="button" id="clearHist" class="small">Очистить</button>
+      <h2 id="h-hist" data-i18n="history">История (последние 10)</h2>
+      <div class="btns">
+        <button type="button" id="expBtn" class="small" data-i18n="h_export">⬇ Экспорт JSON</button>
+        <button type="button" id="impBtn" class="small" data-i18n="h_import">⬆ Импорт JSON</button>
+        <button type="button" id="clearHist" class="small" data-i18n="clear">Очистить</button>
+        <input type="file" id="impFile" accept="application/json,.json" hidden>
+      </div>
     </div>
     <ul class="history" id="history"></ul>
-    <p class="empty" id="histEmpty">Пока пусто. Конфиги сохраняются при копировании кода или по кнопке «В историю».</p>
+    <p class="empty" id="histEmpty" data-i18n="hist_empty">Пока пусто. Конфиги сохраняются при копировании кода или по кнопке «В историю».</p>
   </section>
+  <footer data-i18n="footer">Один HTML-файл · без сборки и бэкенда · бейджи загружаются с shields.io</footer>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
-
 <script>
 (() => {
   'use strict';
 
-  /* ---------- Эталонные функции ---------- */
+  /* =====================================================================
+   *  i18n
+   * ===================================================================== */
+  const I18N = {
+    ru: {
+      subtitle: 'Настройте бейдж shields.io и скопируйте код для README',
+      t_lang: 'Язык', t_theme: 'Переключить тему', settings: 'Настройки',
+      k_static: 'Статический', k_dynamic: 'Динамический',
+      d_source: 'Источник данных', d_hint: 'Данные подтягивает сам shields.io при загрузке картинки — в коде остаётся обычный URL.',
+      d_label: 'Свой label (необязательно)', d_coloron: 'Переопределить цвет Message (иначе цвет по данным)',
+      color_hint: 'Hex (#4c1) или имя цвета (blue, success). Кружки задают Message Color.',
+      logo: 'Logo (slug Simple Icons)', t_catalog: 'Каталог иконок', t_brand: 'Фирменный цвет логотипа',
+      icon_search: 'Поиск иконки…', icon_hint: 'Иконки загружаются с cdn.simpleicons.org; без сети можно вводить slug вручную.',
+      alt: 'Alt-текст (необязательно)', link_hint: 'Допускаются только http(s)-ссылки. Если заданы обе, в обёртке используется Message Link.',
+      presets: 'Пресеты', kits: 'Наборы в один клик', kits_hint: 'Добавляют сразу несколько бейджей в «Набор».',
+      reset: '↺ Сброс', random: '🎲 Случайный', share: '🔗 Скопировать ссылку', save: '💾 В историю',
+      preview: 'Превью', zoom: 'Масштаб', bg_light: 'Светлый фон', bg_dark: 'Тёмный фон',
+      board_add: '➕ В набор', board_upd: '✏️ Обновить выбранный', code: 'Код',
+      scope_one: 'Текущий', scope_board: 'Весь набор', layout: 'Раскладка',
+      l_row: 'В строку', l_col: 'Столбиком', l_center: 'По центру (HTML)',
+      t_clickcopy: 'Клик — скопировать', wrap: 'Обернуть в ссылку', open_svg: '↗ Открыть SVG', shortcut: 'копировать',
+      board: 'Набор бейджей', clear: 'Очистить',
+      board_empty: 'Набор пуст. Нажмите «В набор» или выберите набор в один клик. Перетаскивайте бейджи, чтобы менять порядок.',
+      readme_prev: 'Как выглядит в README',
+      history: 'История (последние 10)', h_export: '⬇ Экспорт JSON', h_import: '⬆ Импорт JSON',
+      hist_empty: 'Пока пусто. Конфиги сохраняются при копировании кода или по кнопке «В историю».',
+      footer: 'Один HTML-файл · без сборки и бэкенда · бейджи загружаются с shields.io',
+      fail: '⚠ Не удалось загрузить', copied: 'Скопировано', copy_fail: 'Не удалось скопировать',
+      link_copied: 'Ссылка скопирована', link_fail: 'Не удалось скопировать ссылку',
+      restored: 'Конфиг восстановлен', preset: 'Пресет: {0}', done_reset: 'Сброшено', saved: 'Сохранено в историю',
+      added: 'Добавлено в набор', updated: 'Бейдж в наборе обновлён', full: 'В наборе максимум {0} бейджей',
+      kit_added: 'Набор «{0}»: +{1}', imported: 'Импортировано', import_fail: 'Не удалось прочитать JSON',
+      mv_left: 'Влево', mv_right: 'Вправо', del: 'Удалить', edit_hint: 'Клик — редактировать',
+      hist_item_restore: 'Восстановить конфиг', rand_done: 'Случайный бейдж 🎲',
+      brand_none: 'Для этого логотипа нет фирменного цвета', brand_ok: 'Фирменный цвет применён',
+      f_owner: 'Владелец (user/org)', f_repo: 'Репозиторий', f_pkg: 'Пакет', f_crate: 'Crate', f_workflow: 'Файл workflow',
+      f_image: 'Образ', f_ext: 'ID расширения', f_formula: 'Формула',
+      kit_js: 'JS / TS', kit_py: 'Python', kit_devops: 'DevOps', kit_social: 'Соцсети', kit_repo: 'GitHub-репозиторий',
+      sw_title: 'Message Color → {0}'
+    },
+    en: {
+      subtitle: 'Configure a shields.io badge and copy the code for your README',
+      t_lang: 'Language', t_theme: 'Toggle theme', settings: 'Settings',
+      k_static: 'Static', k_dynamic: 'Dynamic',
+      d_source: 'Data source', d_hint: 'shields.io fetches the data itself when the image loads — the code stays a plain URL.',
+      d_label: 'Custom label (optional)', d_coloron: 'Override message color (otherwise color follows the data)',
+      color_hint: 'Hex (#4c1) or a color name (blue, success). The dots set Message Color.',
+      logo: 'Logo (Simple Icons slug)', t_catalog: 'Icon catalog', t_brand: 'Brand color of the logo',
+      icon_search: 'Search icons…', icon_hint: 'Icons load from cdn.simpleicons.org; offline you can type a slug by hand.',
+      alt: 'Alt text (optional)', link_hint: 'Only http(s) links are allowed. If both are set, the wrapper uses Message Link.',
+      presets: 'Presets', kits: 'One-click kits', kits_hint: 'Adds several badges to the board at once.',
+      reset: '↺ Reset', random: '🎲 Random', share: '🔗 Copy link', save: '💾 Save to history',
+      preview: 'Preview', zoom: 'Zoom', bg_light: 'Light background', bg_dark: 'Dark background',
+      board_add: '➕ Add to board', board_upd: '✏️ Update selected', code: 'Code',
+      scope_one: 'Current', scope_board: 'Whole board', layout: 'Layout',
+      l_row: 'Inline', l_col: 'Stacked', l_center: 'Centered (HTML)',
+      t_clickcopy: 'Click to copy', wrap: 'Wrap in link', open_svg: '↗ Open SVG', shortcut: 'copy',
+      board: 'Badge board', clear: 'Clear',
+      board_empty: 'The board is empty. Press “Add to board” or pick a kit. Drag badges to reorder them.',
+      readme_prev: 'How it looks in a README',
+      history: 'History (last 10)', h_export: '⬇ Export JSON', h_import: '⬆ Import JSON',
+      hist_empty: 'Nothing yet. Configs are saved when you copy code or press “Save to history”.',
+      footer: 'Single HTML file · no build, no backend · badges load from shields.io',
+      fail: '⚠ Failed to load', copied: 'Copied', copy_fail: 'Copy failed',
+      link_copied: 'Link copied', link_fail: 'Could not copy the link',
+      restored: 'Config restored', preset: 'Preset: {0}', done_reset: 'Reset', saved: 'Saved to history',
+      added: 'Added to board', updated: 'Board badge updated', full: 'The board holds at most {0} badges',
+      kit_added: 'Kit “{0}”: +{1}', imported: 'Imported', import_fail: 'Could not read the JSON',
+      mv_left: 'Move left', mv_right: 'Move right', del: 'Delete', edit_hint: 'Click to edit',
+      hist_item_restore: 'Restore config', rand_done: 'Random badge 🎲',
+      brand_none: 'No brand color known for this logo', brand_ok: 'Brand color applied',
+      f_owner: 'Owner (user/org)', f_repo: 'Repository', f_pkg: 'Package', f_crate: 'Crate', f_workflow: 'Workflow file',
+      f_image: 'Image', f_ext: 'Extension ID', f_formula: 'Formula',
+      kit_js: 'JS / TS', kit_py: 'Python', kit_devops: 'DevOps', kit_social: 'Social', kit_repo: 'GitHub repo',
+      sw_title: 'Message Color → {0}'
+    }
+  };
+
+  /* =====================================================================
+   *  Эталонные функции (+ безопасные обёртки)
+   * ===================================================================== */
   function esc(s) {
     return String(s).replace(/-/g, '--').replace(/_/g, '__');
   }
 
   function buildUrl(c) {
+    if (c.kind === 'dynamic') return buildDynUrl(c);
     const base = 'https://img.shields.io/badge/';
     const label = encodeURIComponent(esc(c.label));
     const message = encodeURIComponent(esc(c.message));
@@ -318,7 +539,7 @@
     if (c.logo && c.logoColor) p.set('logoColor', c.logoColor.replace('#', ''));
     if (c.labelColor) p.set('labelColor', c.labelColor.replace('#', ''));
     const q = p.toString();
-    // Пустой label → двухчастная форма /badge/<message>-<color>
+    // пустой label → двухчастная форма /badge/<message>-<color>
     let path;
     if (!String(c.label).trim()) path = `${message || '%20'}-${color}`;
     else if (!String(c.message).trim()) path = `${label}-%20-${color}`;
@@ -326,7 +547,57 @@
     return `${base}${path}${q ? '?' + q : ''}`;
   }
 
-  // Экранирование для вставки в разметку (защита сгенерированного кода)
+  /* ---- динамические бейджи: шаблоны путей shields.io ---- */
+  const F = {
+    owner: { id: 'f_owner', ex: 'octocat' }, repo: { id: 'f_repo', ex: 'Hello-World' },
+    pkg: { id: 'f_pkg', ex: 'react' }, pypi: { id: 'f_pkg', ex: 'requests' }, crate: { id: 'f_crate', ex: 'serde' },
+    wf: { id: 'f_workflow', ex: 'ci.yml' }, dOwner: { id: 'f_owner', ex: 'library' }, dImg: { id: 'f_image', ex: 'nginx' },
+    ext: { id: 'f_ext', ex: 'ms-python.python' }, brew: { id: 'f_formula', ex: 'wget' }
+  };
+  const DYN = {
+    'gh-stars': { g: 'GitHub', n: 'Stars', path: 'github/stars/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-forks': { g: 'GitHub', n: 'Forks', path: 'github/forks/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-issues': { g: 'GitHub', n: 'Issues', path: 'github/issues/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-prs': { g: 'GitHub', n: 'Pull requests', path: 'github/issues-pr/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-license': { g: 'GitHub', n: 'License', path: 'github/license/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-release': { g: 'GitHub', n: 'Latest release', path: 'github/v/release/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-commit': { g: 'GitHub', n: 'Last commit', path: 'github/last-commit/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-lang': { g: 'GitHub', n: 'Top language', path: 'github/languages/top/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-size': { g: 'GitHub', n: 'Repo size', path: 'github/repo-size/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-contrib': { g: 'GitHub', n: 'Contributors', path: 'github/contributors/{1}/{2}', f: [F.owner, F.repo], logo: 'github' },
+    'gh-ci': { g: 'GitHub', n: 'Workflow status', path: 'github/actions/workflow/status/{1}/{2}/{3}', f: [F.owner, F.repo, F.wf], logo: 'githubactions' },
+    'npm-v': { g: 'npm', n: 'Version', path: 'npm/v/{1}', f: [F.pkg], logo: 'npm' },
+    'npm-dm': { g: 'npm', n: 'Downloads / month', path: 'npm/dm/{1}', f: [F.pkg], logo: 'npm' },
+    'npm-l': { g: 'npm', n: 'License', path: 'npm/l/{1}', f: [F.pkg], logo: 'npm' },
+    'npm-size': { g: 'npm', n: 'Minzipped size', path: 'bundlephobia/minzip/{1}', f: [F.pkg], logo: 'npm' },
+    'pypi-v': { g: 'PyPI', n: 'Version', path: 'pypi/v/{1}', f: [F.pypi], logo: 'pypi' },
+    'pypi-py': { g: 'PyPI', n: 'Python versions', path: 'pypi/pyversions/{1}', f: [F.pypi], logo: 'python' },
+    'pypi-dm': { g: 'PyPI', n: 'Downloads / month', path: 'pypi/dm/{1}', f: [F.pypi], logo: 'pypi' },
+    'crates-v': { g: 'Other', n: 'crates.io version', path: 'crates/v/{1}', f: [F.crate], logo: 'rust' },
+    'docker-pulls': { g: 'Other', n: 'Docker pulls', path: 'docker/pulls/{1}/{2}', f: [F.dOwner, F.dImg], logo: 'docker' },
+    'vscode-v': { g: 'Other', n: 'VS Code extension version', path: 'visual-studio-marketplace/v/{1}', f: [F.ext], logo: 'visualstudiocode' },
+    'brew-v': { g: 'Other', n: 'Homebrew version', path: 'homebrew/v/{1}', f: [F.brew], logo: '' }
+  };
+  const DYN_IDS = Object.keys(DYN);
+
+  const encPath = v => String(v).trim().split('/').map(encodeURIComponent).join('/').replace(/%40/g, '@');
+  const normColor = v => String(v || '').replace('#', '').toLowerCase();
+
+  function buildDynUrl(c) {
+    const T = DYN[c.dyn] || DYN['gh-stars'];
+    const path = T.path.replace(/\{(\d)\}/g, (_, n) => encPath(c['p' + n] || T.f[n - 1].ex));
+    const p = new URLSearchParams();
+    if (c.style && c.style !== 'flat') p.set('style', c.style);
+    if (c.dLabel) p.set('label', c.dLabel);
+    if (c.logo) p.set('logo', c.logo);
+    if (c.logo && c.logoColor) p.set('logoColor', normColor(c.logoColor));
+    if (c.labelColor && normColor(c.labelColor) !== '555555') p.set('labelColor', normColor(c.labelColor));
+    if (c.colorOn && c.messageColor) p.set('color', normColor(c.messageColor));
+    const q = p.toString();
+    return `https://img.shields.io/${path}${q ? '?' + q : ''}`;
+  }
+
+  /* ---- безопасные помощники для экспорта ---- */
   const escAttr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const escMdAlt = s => String(s).replace(/([\\\[\]])/g, '\\$1');
   const safeLink = u => { // только http(s)
@@ -337,63 +608,157 @@
       return (x.protocol === 'http:' || x.protocol === 'https:') ? u.replace(/\)/g, '%29').replace(/\s/g, '%20') : '';
     } catch { return ''; }
   };
-  const altOf = c => `${c.label} ${c.message}`.trim();
+  const altOf = c => {
+    if (c.alt) return c.alt;
+    if (c.kind === 'dynamic') return c.dLabel || (DYN[c.dyn] || DYN['gh-stars']).n;
+    return `${c.label} ${c.message}`.trim();
+  };
+  const oneLine = s => String(s).replace(/\s+/g, ' ');
   const targetOf = c => safeLink(c.messageLink) || safeLink(c.labelLink);
 
   function toMarkdown(c, wrap = true) {
-    const img = `![${escMdAlt(altOf(c))}](${buildUrl(c)})`;
+    const img = `![${escMdAlt(oneLine(altOf(c)))}](${buildUrl(c)})`;
     const target = targetOf(c);
     return (wrap && target) ? `[${img}](${target})` : img;
   }
-
   function toHtml(c, wrap = true) {
     const img = `<img src="${escAttr(buildUrl(c))}" alt="${escAttr(altOf(c))}">`;
     const target = targetOf(c);
     return (wrap && target) ? `<a href="${escAttr(target)}">${img}</a>` : img;
   }
+  function toRst(c, wrap = true) {
+    const target = targetOf(c);
+    let s = `.. image:: ${buildUrl(c)}\n   :alt: ${oneLine(altOf(c))}`;
+    if (wrap && target) s += `\n   :target: ${target}`;
+    return s;
+  }
+  function toAdoc(c, wrap = true) {
+    let alt = oneLine(altOf(c));
+    if (/[,\]"]/.test(alt)) alt = `"${alt.replace(/"/g, '\\"').replace(/]/g, '\\]')}"`;
+    const target = targetOf(c);
+    return `image:${buildUrl(c)}[${alt}${(wrap && target) ? ',link=' + target : ''}]`;
+  }
+  const FORMATS = { md: toMarkdown, html: toHtml, url: c => buildUrl(c), rst: toRst, adoc: toAdoc };
 
-  /* ---------- Константы ---------- */
+  function exportMany(list, fmt, wrap, layout) {
+    if (fmt === 'url') return list.map(buildUrl).join('\n');
+    if (layout === 'center' && (fmt === 'md' || fmt === 'html')) {
+      return '<p align="center">\n' + list.map(c => '  ' + toHtml(c, wrap)).join('\n') + '\n</p>';
+    }
+    const items = list.map(c => FORMATS[fmt](c, wrap));
+    let sep;
+    if (fmt === 'rst') sep = '\n\n';
+    else if (layout === 'column') sep = fmt === 'html' ? '<br>\n' : '\n\n';
+    else sep = fmt === 'html' ? '\n' : ' ';
+    return items.join(sep);
+  }
+
+  /* =====================================================================
+   *  Данные
+   * ===================================================================== */
   const DEFAULTS = Object.freeze({
+    kind: 'static',
     label: 'build', message: 'passing',
     labelColor: '#555555', messageColor: '#4c1',
     style: 'flat', logo: '', logoColor: '#ffffff',
-    labelLink: '', messageLink: ''
+    labelLink: '', messageLink: '', alt: '',
+    dyn: 'gh-stars', p1: '', p2: '', p3: '', dLabel: '', colorOn: ''
   });
   const KEYS = Object.keys(DEFAULTS);
-  const PARAM = { label: 'l', message: 'm', labelColor: 'lc', messageColor: 'mc', style: 's', logo: 'lg', logoColor: 'lgc', labelLink: 'll', messageLink: 'ml' };
+  const PARAM = {
+    kind: 'k', label: 'l', message: 'm', labelColor: 'lc', messageColor: 'mc', style: 's', logo: 'lg', logoColor: 'lgc',
+    labelLink: 'll', messageLink: 'ml', alt: 'a', dyn: 'dy', p1: 'p1', p2: 'p2', p3: 'p3', dLabel: 'dl', colorOn: 'co'
+  };
   const STYLES = ['flat', 'flat-square', 'plastic', 'for-the-badge', 'social'];
-  const LS = { theme: 'rb.theme', history: 'rb.history', state: 'rb.state' };
+  const FMTS = ['md', 'html', 'url', 'rst', 'adoc'];
+  const LAYOUTS = ['row', 'column', 'center'];
+  const LS = { theme: 'rb.theme', lang: 'rb.lang', history: 'rb.history', state: 'rb.state', board: 'rb.board', prefs: 'rb.prefs' };
+  const BOARD_MAX = 30;
+
+  const SWATCHES = [
+    ['brightgreen', '#4c1'], ['green', '#97ca00'], ['yellowgreen', '#a4a61d'], ['yellow', '#dfb317'], ['orange', '#fe7d37'],
+    ['red', '#e05d44'], ['blue', '#007ec6'], ['lightgrey', '#9f9f9f'], ['purple', '#8957e5'], ['pink', '#e25555'], ['black', '#000000']
+  ];
+
+  // slug:HEX — фирменные цвета Simple Icons (для кнопки 🎨 и каталога)
+  const ICON_DATA = ('github:181717 gitlab:FC6D26 git:F05032 bitbucket:0052CC githubactions:2088FF githubpages:222222 githubsponsors:EA4AAA ' +
+    'npm:CB3837 yarn:2C8EBB pnpm:F69220 nodedotjs:5FA04E deno:70FFAF bun:FBF0DF javascript:F7DF1E typescript:3178C6 python:3776AB rust:000000 ' +
+    'go:00ADD8 openjdk:ED8B00 kotlin:7F52FF swift:F05138 php:777BB4 ruby:CC342D dotnet:512BD4 cplusplus:00599C c:A8B9CC html5:E34F26 css3:1572B6 ' +
+    'react:61DAFB vuedotjs:4FC08D angular:DD0031 svelte:FF3E00 nextdotjs:000000 nuxtdotjs:00DC82 vite:646CFF webpack:8DD6F9 tailwindcss:06B6D4 ' +
+    'bootstrap:7952B3 sass:CC6699 astro:BC52EE docker:2496ED kubernetes:326CE5 linux:FCC624 ubuntu:E95420 debian:A81D33 apple:000000 windows:0078D4 ' +
+    'android:3DDC84 discord:5865F2 telegram:26A5E4 x:000000 youtube:FF0000 twitch:9146FF linkedin:0A66C2 reddit:FF4500 mastodon:6364FF bluesky:0285FF ' +
+    'visualstudiocode:007ACC intellijidea:000000 vim:019733 neovim:57A143 semver:3F4551 pypi:3775A9 codecov:F01F7A circleci:343434 vercel:000000 ' +
+    'netlify:00C7B7 cloudflare:F38020 firebase:DD2C00 supabase:3FCF8E postgresql:4169E1 mysql:4479A1 mongodb:47A248 redis:FF4438 sqlite:003B57 ' +
+    'graphql:E10098 prettier:F7B93E eslint:4B32C3 jest:C21325 vitest:6E9F18 pytest:0A9EDC flask:000000 django:092E20 fastapi:009688 express:000000 ' +
+    'laravel:FF2D20 rubyonrails:D30001 spring:6DB33F flutter:02569B dart:0175C2 electron:47848F tauri:FFC131 unity:000000 godotengine:478CBF ' +
+    'arduino:00878F raspberrypi:A22846 homeassistant:18BCF2 obsidian:7C3AED notion:000000 figma:F24E1E markdown:000000 latex:008080 openai:412991 ' +
+    'huggingface:FFD21E pytorch:EE4C2C tensorflow:FF6F00 numpy:013243 pandas:150458 jupyter:F37626 anaconda:44A833 kaggle:20BEFF ' +
+    'buymeacoffee:FFDD00 patreon:FF424D kofi:FF5E5B opencollective:7FADF2 liberapay:F6C915 paypal:003087 stackoverflow:F58025 wikipedia:000000').split(' ');
+  const BRAND = {};
+  ICON_DATA.forEach(s => { const [k, v] = s.split(':'); BRAND[k] = '#' + v.toLowerCase(); });
+  const ICON_SLUGS = Object.keys(BRAND);
+
   const PRESETS = [
     { name: 'Build Status', cfg: { label: 'build', message: 'passing', messageColor: '#4c1', logo: 'githubactions' } },
-    { name: 'License MIT', cfg: { label: 'license', message: 'MIT', messageColor: 'blue', logo: '' } },
+    { name: 'License MIT', cfg: { label: 'license', message: 'MIT', messageColor: 'blue' } },
     { name: 'Version', cfg: { label: 'version', message: 'v1.0.0', messageColor: '#007ec6', logo: 'semver' } },
     { name: 'Downloads', cfg: { label: 'downloads', message: '10k/month', messageColor: '#2ea44f', logo: 'npm' } },
-    { name: 'Made with ❤', cfg: { label: 'made with', message: '❤', messageColor: '#e25555', logo: '' } }
+    { name: 'Made with ❤', cfg: { label: 'made with', message: '❤', messageColor: '#e25555' } }
   ];
-  const LOGOS = ['github', 'githubactions', 'gitlab', 'git', 'npm', 'yarn', 'pnpm', 'nodedotjs', 'deno', 'bun', 'javascript', 'typescript',
-    'python', 'rust', 'go', 'java', 'kotlin', 'swift', 'php', 'ruby', 'csharp', 'cplusplus', 'c', 'html5', 'css3', 'react', 'vuedotjs',
-    'angular', 'svelte', 'nextdotjs', 'docker', 'kubernetes', 'linux', 'apple', 'windows', 'android', 'discord', 'telegram', 'twitter',
-    'x', 'youtube', 'linkedin', 'visualstudiocode', 'semver', 'pypi', 'codecov', 'travisci', 'circleci', 'vercel', 'netlify', 'firebase'];
 
-  /* ---------- Утилиты ---------- */
+  const lum = hex => {
+    const h = /^#?([0-9a-f]{6})$/i.exec(hex);
+    if (!h) return 0;
+    const n = parseInt(h[1], 16);
+    return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  };
+  const tech = (name, slug) => {
+    const col = BRAND[slug] || '#555555';
+    return { label: '', message: name, labelColor: '', messageColor: col, style: 'for-the-badge', logo: slug, logoColor: lum(col) > 0.6 ? '#000000' : '#ffffff' };
+  };
+  const KITS = [
+    { id: 'kit_js', make: () => [tech('JavaScript', 'javascript'), tech('TypeScript', 'typescript'), tech('React', 'react'), tech('Node.js', 'nodedotjs'), tech('Vite', 'vite')] },
+    { id: 'kit_py', make: () => [tech('Python', 'python'), tech('Django', 'django'), tech('FastAPI', 'fastapi'), tech('NumPy', 'numpy'), tech('Jupyter', 'jupyter')] },
+    { id: 'kit_devops', make: () => [tech('Docker', 'docker'), tech('Kubernetes', 'kubernetes'), tech('GitHub Actions', 'githubactions'), tech('Linux', 'linux'), tech('Git', 'git')] },
+    { id: 'kit_social', make: () => [tech('GitHub', 'github'), tech('Telegram', 'telegram'), tech('Discord', 'discord'), tech('YouTube', 'youtube'), tech('X', 'x')] },
+    {
+      id: 'kit_repo', make: () => {
+        const gh = current.kind === 'dynamic' && current.dyn.startsWith('gh-');
+        const o = gh && current.p1 ? current.p1 : 'octocat';
+        const r = gh && current.p2 ? current.p2 : 'Hello-World';
+        return ['gh-stars', 'gh-forks', 'gh-issues', 'gh-license', 'gh-commit'].map(d => ({
+          kind: 'dynamic', dyn: d, p1: o, p2: r, style: 'flat', logo: 'github', labelColor: '', logoColor: '#ffffff'
+        }));
+      }
+    }
+  ];
+
+  /* =====================================================================
+   *  Утилиты
+   * ===================================================================== */
   const $ = id => document.getElementById(id);
+  const qsa = (s, r = document) => [...r.querySelectorAll(s)];
   const el = (tag, props = {}, ...kids) => {
     const n = document.createElement(tag);
-    for (const [k, v] of Object.entries(props)) {
-      if (k === 'class') n.className = v; else n[k] = v;
-    }
+    for (const [k, v] of Object.entries(props)) { if (k === 'class') n.className = v; else n[k] = v; }
     kids.forEach(k => n.append(k));
     return n;
   };
   const lsGet = (k, fb) => { try { const v = localStorage.getItem(k); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* приватный режим / квота */ } };
 
+  let lang = 'ru';
+  const t = (k, ...a) => String(I18N[lang][k] ?? I18N.ru[k] ?? k).replace(/\{(\d)\}/g, (_, i) => a[i]);
+
   function sanitize(obj) {
     const c = { ...DEFAULTS };
     if (obj && typeof obj === 'object') {
-      for (const k of KEYS) if (typeof obj[k] === 'string') c[k] = obj[k];
+      for (const k of KEYS) if (typeof obj[k] === 'string') c[k] = obj[k].slice(0, 500);
     }
     if (!STYLES.includes(c.style)) c.style = 'flat';
+    if (c.kind !== 'dynamic') c.kind = 'static';
+    if (!DYN[c.dyn]) c.dyn = 'gh-stars';
+    c.colorOn = c.colorOn ? '1' : '';
     return c;
   }
 
@@ -409,11 +774,11 @@
 
   let toastTimer;
   function toast(msg) {
-    const t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    const n = $('toast');
+    n.textContent = msg;
+    n.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    toastTimer = setTimeout(() => n.classList.remove('show'), 1800);
   }
 
   async function copyText(text) {
@@ -433,21 +798,61 @@
     return ok;
   }
 
-  /* ---------- Состояние формы ---------- */
+  const b64e = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const b64d = s => {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    return new TextDecoder().decode(Uint8Array.from(atob(s), ch => ch.charCodeAt(0)));
+  };
+  const compact = c => { const o = {}; KEYS.forEach(k => { if (c[k] !== DEFAULTS[k]) o[PARAM[k]] = c[k]; }); return o; };
+  const expand = o => {
+    const c = {};
+    KEYS.forEach(k => { if (o && typeof o[PARAM[k]] === 'string') c[k] = o[PARAM[k]]; });
+    return sanitize(c);
+  };
+  // читает и компактный, и полный формат (для localStorage / импорта)
+  const revive = o => {
+    const c = {};
+    KEYS.forEach(k => {
+      if (o && typeof o[PARAM[k]] === 'string') c[k] = o[PARAM[k]];
+      if (o && typeof o[k] === 'string') c[k] = o[k];
+    });
+    return sanitize(c);
+  };
+
+  /* =====================================================================
+   *  Состояние
+   * ===================================================================== */
   const fields = {};
-  KEYS.forEach(k => { fields[k] = $(k); });
+  ['label', 'message', 'labelColor', 'messageColor', 'style', 'logo', 'logoColor', 'labelLink', 'messageLink', 'alt', 'dyn', 'p1', 'p2', 'p3', 'dLabel']
+    .forEach(k => { fields[k] = $(k); });
   const pickers = { labelColor: $('labelColorPick'), messageColor: $('messageColorPick'), logoColor: $('logoColorPick') };
 
+  let kind = 'static';
+  let current = { ...DEFAULTS };
+  let board = [];
+  let sel = -1;
+  const prefs = Object.assign({ scope: 'one', fmt: 'md', layout: 'row', mock: 'light', zoom: 1, wrap: true }, lsGet(LS.prefs, {}));
+  if (!['one', 'board'].includes(prefs.scope)) prefs.scope = 'one';
+  if (!FMTS.includes(prefs.fmt)) prefs.fmt = 'md';
+  if (!LAYOUTS.includes(prefs.layout)) prefs.layout = 'row';
+  if (!['light', 'dark'].includes(prefs.mock)) prefs.mock = 'light';
+  prefs.zoom = Math.min(3, Math.max(1, Number(prefs.zoom) || 1));
+  const savePrefs = () => lsSet(LS.prefs, prefs);
+
   function readForm() {
-    const c = {};
-    KEYS.forEach(k => { c[k] = fields[k].value.trim(); });
-    // пробелы внутри label/message важны, но крайние — нет
+    const c = { kind };
+    Object.keys(fields).forEach(k => { c[k] = fields[k].value.trim(); });
+    c.colorOn = $('colorOn').checked ? '1' : '';
     return sanitize(c);
   }
 
   function writeForm(cfg) {
     const c = sanitize(cfg);
-    KEYS.forEach(k => { fields[k].value = c[k]; });
+    Object.keys(fields).forEach(k => { fields[k].value = c[k]; });
+    $('colorOn').checked = !!c.colorOn;
+    setKind(c.kind, true);
+    applyDynFields();
     syncPickers();
     validate();
   }
@@ -469,43 +874,88 @@
     }
   }
 
-  /* ---------- Превью ---------- */
-  function renderBadge(stage, url, alt) {
-    stage.textContent = '';
-    const img = el('img', { alt, decoding: 'async' });
-    img.addEventListener('error', () => {
-      stage.textContent = '';
-      stage.append(el('span', { class: 'fallback', textContent: '⚠ Не удалось загрузить' }));
-    }, { once: true });
-    img.src = url;
-    stage.append(img);
+  function setKind(k, silent) {
+    kind = k === 'dynamic' ? 'dynamic' : 'static';
+    qsa('#kindSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kind === kind)));
+    $('staticBox').hidden = kind !== 'static';
+    $('dynBox').hidden = kind !== 'dynamic';
+    $('colorOnRow').hidden = kind !== 'dynamic';
+    if (!silent) scheduleUpdate();
   }
 
-  let tab = 'md';
-  let current = { ...DEFAULTS };
+  function applyDynFields() {
+    const T = DYN[fields.dyn.value] || DYN['gh-stars'];
+    [1, 2, 3].forEach(i => {
+      const f = T.f[i - 1];
+      $('fp' + i).hidden = !f;
+      if (f) { $('lp' + i).textContent = t(f.id); $('p' + i).placeholder = f.ex; }
+    });
+  }
+
+  /* =====================================================================
+   *  Превью и код
+   * ===================================================================== */
+  function renderBadge(host, url, alt) {
+    host.textContent = '';
+    const img = el('img', { alt, decoding: 'async' });
+    img.addEventListener('error', () => {
+      host.textContent = '';
+      host.append(el('span', { class: 'fallback', textContent: t('fail') }));
+    }, { once: true });
+    img.src = url;
+    host.append(img);
+  }
+
+  const scopeList = () => (prefs.scope === 'board' && board.length ? board : [current]);
+
+  function exportText() {
+    if (prefs.scope === 'board' && board.length) return exportMany(board, prefs.fmt, prefs.wrap, prefs.layout);
+    return FORMATS[prefs.fmt](current, prefs.wrap);
+  }
 
   function renderCode() {
-    const c = current;
-    const hasLink = !!targetOf(c);
-    $('wrapOpt').hidden = !hasLink;
-    const wrap = $('wrapLink').checked;
-    let out;
-    if (tab === 'md') out = toMarkdown(c, wrap);
-    else if (tab === 'html') out = toHtml(c, wrap);
-    else out = buildUrl(c);
-    $('code').textContent = out;
-    return out;
+    const multi = prefs.scope === 'board' && board.length > 0;
+    $('wrapOpt').hidden = !scopeList().some(targetOf);
+    $('layoutRow').hidden = !(multi && prefs.fmt !== 'url');
+    $('code').textContent = exportText();
+    $('svgLink').href = buildUrl(current);
+    $('svgLink').hidden = multi;
+  }
+
+  function renderMock() {
+    const list = scopeList();
+    const host = $('mockBadges');
+    host.textContent = '';
+    host.className = 'bs' + (prefs.layout === 'column' ? ' column' : prefs.layout === 'center' ? ' center' : '');
+    if (!(prefs.scope === 'board' && board.length)) host.className = 'bs';
+    list.forEach(c => {
+      const img = el('img', { alt: altOf(c), loading: 'lazy' });
+      img.addEventListener('error', () => img.replaceWith(el('span', { textContent: t('fail'), class: 'fallback' })), { once: true });
+      img.src = buildUrl(c);
+      host.append(img);
+    });
+    $('mock').classList.toggle('dark', prefs.mock === 'dark');
+  }
+
+  function applyZoom() {
+    $('zoom').value = String(prefs.zoom);
+    ['stageLight', 'stageDark'].forEach(id => { qsa('img', $(id)).forEach(i => { i.style.zoom = prefs.zoom; }); });
+  }
+
+  function renderStages() {
+    const url = buildUrl(current), alt = altOf(current);
+    renderBadge($('stageLight'), url, alt);
+    renderBadge($('stageDark'), url, alt);
+    applyZoom();
   }
 
   function update() {
     current = readForm();
     validate();
-    const url = buildUrl(current);
-    const alt = altOf(current);
-    renderBadge($('stageLight'), url, alt);
-    renderBadge($('stageDark'), url, alt);
+    renderStages();
     renderCode();
-    lsSet(LS.state, current);
+    renderMock();
+    lsSet(LS.state, compact(current));
   }
 
   let debounceTimer;
@@ -513,112 +963,301 @@
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(update, 150);
   }
+  const flush = () => { clearTimeout(debounceTimer); update(); };
 
-  /* ---------- История ---------- */
+  /* =====================================================================
+   *  Набор (board)
+   * ===================================================================== */
+  function saveBoard() { lsSet(LS.board, board.map(compact)); }
+
+  function refreshBoardDeps() {
+    $('scopeCnt').textContent = String(board.length);
+    $('updBtn').disabled = sel < 0 || sel >= board.length;
+    $('boardEmpty').hidden = board.length > 0;
+    $('clearBoard').hidden = board.length === 0;
+    renderBoard();
+    renderCode();
+    renderMock();
+  }
+
+  function moveItem(from, to) {
+    if (to < 0 || to >= board.length || from === to) return;
+    const [it] = board.splice(from, 1);
+    board.splice(to, 0, it);
+    if (sel === from) sel = to; else if (sel > from && sel <= to) sel--; else if (sel < from && sel >= to) sel++;
+    saveBoard();
+    refreshBoardDeps();
+  }
+
+  function renderBoard() {
+    const host = $('board');
+    host.textContent = '';
+    board.forEach((cfg, i) => {
+      const img = el('img', { alt: altOf(cfg), loading: 'lazy' });
+      img.addEventListener('error', () => img.replaceWith(el('span', { class: 'hi-txt', textContent: t('fail') })), { once: true });
+      img.src = buildUrl(cfg);
+      const mk = (txt, title, fn) => {
+        const b = el('button', { type: 'button', textContent: txt, title: t(title) });
+        b.setAttribute('aria-label', t(title));
+        b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+        return b;
+      };
+      const mini = el('span', { class: 'mini' },
+        mk('✕', 'del', () => {
+          board.splice(i, 1);
+          if (sel === i) sel = -1; else if (sel > i) sel--;
+          saveBoard(); refreshBoardDeps();
+        }),
+        mk('◀', 'mv_left', () => moveItem(i, i - 1)),
+        mk('▶', 'mv_right', () => moveItem(i, i + 1)));
+      const chip = el('div', { class: 'bchip' + (i === sel ? ' sel' : ''), draggable: true, title: t('edit_hint'), tabIndex: 0 }, img, mini);
+      const pick = () => { sel = i; writeForm(cfg); flush(); refreshBoardDeps(); };
+      chip.addEventListener('click', pick);
+      chip.addEventListener('keydown', e => { if (e.key === 'Enter') pick(); });
+      chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(i)); e.dataTransfer.effectAllowed = 'move'; });
+      chip.addEventListener('dragover', e => { e.preventDefault(); chip.classList.add('over'); });
+      chip.addEventListener('dragleave', () => chip.classList.remove('over'));
+      chip.addEventListener('drop', e => {
+        e.preventDefault();
+        chip.classList.remove('over');
+        const from = Number(e.dataTransfer.getData('text/plain'));
+        if (Number.isInteger(from)) moveItem(from, i);
+      });
+      host.append(chip);
+    });
+  }
+
+  function boardAdd(cfgs) {
+    const room = BOARD_MAX - board.length;
+    if (room <= 0) { toast(t('full', BOARD_MAX)); return 0; }
+    const add = cfgs.slice(0, room).map(sanitize);
+    board.push(...add);
+    saveBoard();
+    refreshBoardDeps();
+    return add.length;
+  }
+
+  /* =====================================================================
+   *  История
+   * ===================================================================== */
   const sameCfg = (a, b) => KEYS.every(k => a[k] === b[k]);
+  const getHistory = () => { const h = lsGet(LS.history, []); return Array.isArray(h) ? h.slice(0, 10).map(x => revive(x)) : []; };
 
   function saveHistory(cfg) {
-    let h = lsGet(LS.history, []);
-    if (!Array.isArray(h)) h = [];
-    h = h.map(sanitize).filter(x => !sameCfg(x, cfg));
+    let h = getHistory().filter(x => !sameCfg(x, cfg));
     h.unshift(sanitize(cfg));
-    h = h.slice(0, 10);
-    lsSet(LS.history, h);
+    lsSet(LS.history, h.slice(0, 10).map(compact));
     renderHistory();
   }
 
+  const describe = c => c.kind === 'dynamic'
+    ? `${(DYN[c.dyn] || {}).g} ${(DYN[c.dyn] || {}).n} · ${[c.p1, c.p2, c.p3].filter(Boolean).join('/') || '…'}`
+    : `${c.label} | ${c.message} | ${c.style}`;
+
   function renderHistory() {
-    let h = lsGet(LS.history, []);
-    if (!Array.isArray(h)) h = [];
-    h = h.slice(0, 10).map(sanitize);
+    const h = getHistory();
     const ul = $('history');
     ul.textContent = '';
     $('histEmpty').hidden = h.length > 0;
     $('clearHist').hidden = h.length === 0;
     h.forEach(cfg => {
       const img = el('img', { alt: altOf(cfg), loading: 'lazy' });
-      img.addEventListener('error', () => { img.replaceWith(el('span', { class: 'hi-txt', textContent: '⚠ Не удалось загрузить' })); }, { once: true });
+      img.addEventListener('error', () => img.replaceWith(el('span', { class: 'hi-txt', textContent: t('fail') })), { once: true });
       img.src = buildUrl(cfg);
-      const btn = el('button', { type: 'button', title: 'Восстановить конфиг' },
+      const btn = el('button', { type: 'button', title: t('hist_item_restore') },
         el('span', { class: 'hi-img' }, img),
-        el('span', { class: 'hi-txt', textContent: `${cfg.label} | ${cfg.message} | ${cfg.style}` }));
+        el('span', { class: 'hi-txt', textContent: describe(cfg) }));
       btn.addEventListener('click', () => {
-        writeForm(cfg);
-        update();
-        toast('Конфиг восстановлен');
+        sel = -1;
+        writeForm(cfg); flush(); refreshBoardDeps();
+        toast(t('restored'));
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       ul.append(el('li', {}, btn));
     });
   }
 
-  /* ---------- Share / URL params ---------- */
-  function configToQuery(cfg) {
-    const p = new URLSearchParams();
-    KEYS.forEach(k => { if (cfg[k] !== DEFAULTS[k]) p.set(PARAM[k], cfg[k]); });
+  /* =====================================================================
+   *  Share / query params
+   * ===================================================================== */
+  function configToQuery(cfg, withBoard) {
+    const p = new URLSearchParams(compact(cfg));
+    if (withBoard && board.length) p.set('b', b64e(JSON.stringify(board.map(compact))));
     return p.toString();
   }
 
-  function configFromQuery(search) {
+  function stateFromQuery(search) {
     const p = new URLSearchParams(search);
+    let cfg = null, brd = null;
     const o = {};
     let found = false;
-    KEYS.forEach(k => {
-      if (p.has(PARAM[k])) { o[k] = p.get(PARAM[k]); found = true; }
-    });
-    return found ? sanitize({ ...DEFAULTS, ...o }) : null;
+    KEYS.forEach(k => { if (p.has(PARAM[k])) { o[PARAM[k]] = p.get(PARAM[k]); found = true; } });
+    if (found) cfg = expand(o);
+    if (p.has('b')) {
+      try {
+        const arr = JSON.parse(b64d(p.get('b')));
+        if (Array.isArray(arr)) brd = arr.slice(0, BOARD_MAX).map(expand);
+      } catch { /* битая ссылка */ }
+    }
+    return { cfg, brd };
   }
 
   function shareUrl(cfg) {
-    const q = configToQuery(cfg);
+    const q = configToQuery(cfg, true);
     const base = location.href.split('#')[0].split('?')[0];
     return q ? `${base}?${q}` : base;
   }
 
-  /* ---------- Инициализация UI ---------- */
-  // datalist
-  const dl = $('logos');
-  LOGOS.forEach(s => dl.append(el('option', { value: s })));
+  /* =====================================================================
+   *  Каталог иконок
+   * ===================================================================== */
+  let iconsBuilt = false;
+  function iconSrc(slug) {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return `https://cdn.simpleicons.org/${encodeURIComponent(slug)}` + (dark ? '/ffffff' : '');
+  }
+  function paintIcons() {
+    qsa('#icons img').forEach(i => { i.src = iconSrc(i.dataset.slug); });
+  }
+  function buildIcons() {
+    if (iconsBuilt) return;
+    iconsBuilt = true;
+    const host = $('icons');
+    ICON_SLUGS.forEach(slug => {
+      const img = el('img', { alt: '', loading: 'lazy', width: 22, height: 22 });
+      img.dataset.slug = slug;
+      const b = el('button', { type: 'button', title: slug }, img);
+      b.setAttribute('aria-label', slug);
+      b.dataset.slug = slug;
+      img.addEventListener('error', () => b.remove(), { once: true });
+      b.addEventListener('click', () => {
+        fields.logo.value = slug;
+        scheduleUpdate();
+      });
+      host.append(b);
+    });
+    paintIcons();
+  }
+  function filterIcons() {
+    const q = $('iconSearch').value.trim().toLowerCase();
+    qsa('#icons button').forEach(b => { b.hidden = !!q && !b.dataset.slug.includes(q); });
+  }
+
+  /* =====================================================================
+   *  Инициализация UI
+   * ===================================================================== */
+  ICON_SLUGS.forEach(s => $('logos').append(el('option', { value: s })));
+
+  // шаблоны динамических бейджей
+  (function buildDynSelect() {
+    const groups = {};
+    DYN_IDS.forEach(id => {
+      const T = DYN[id];
+      if (!groups[T.g]) { groups[T.g] = el('optgroup', { label: T.g }); fields.dyn.append(groups[T.g]); }
+      groups[T.g].append(el('option', { value: id, textContent: T.n }));
+    });
+  })();
+
+  // цвета
+  SWATCHES.forEach(([name, hex]) => {
+    const b = el('button', { type: 'button', class: 'sw' });
+    b.style.background = hex;
+    b.addEventListener('click', () => {
+      fields.messageColor.value = hex;
+      if (kind === 'dynamic') $('colorOn').checked = true;
+      syncPickers(); validate(); scheduleUpdate();
+    });
+    b.dataset.name = name; b.dataset.hex = hex;
+    $('swatches').append(b);
+  });
 
   // пресеты
   PRESETS.forEach(p => {
-    const b = el('button', { type: 'button', textContent: p.name });
+    const b = el('button', { type: 'button', class: 'chip', textContent: p.name });
     b.addEventListener('click', () => {
+      sel = -1;
       writeForm({ ...DEFAULTS, ...p.cfg });
-      update();
-      toast(`Пресет: ${p.name}`);
+      flush(); refreshBoardDeps();
+      toast(t('preset', p.name));
     });
     $('presets').append(b);
   });
 
-  // поля
-  KEYS.forEach(k => {
+  // наборы
+  function renderKits() {
+    const host = $('kits');
+    host.textContent = '';
+    KITS.forEach(k => {
+      const b = el('button', { type: 'button', class: 'chip', textContent: '➕ ' + t(k.id) });
+      b.addEventListener('click', () => {
+        const n = boardAdd(k.make());
+        if (n) toast(t('kit_added', t(k.id), n));
+      });
+      host.append(b);
+    });
+  }
+
+  // поля формы
+  Object.keys(fields).forEach(k => {
     fields[k].addEventListener('input', () => {
       if (pickers[k]) { const hex = toPickerHex(fields[k].value); if (hex) pickers[k].value = hex; }
       validate();
       scheduleUpdate();
     });
-    if (k === 'style') fields[k].addEventListener('change', scheduleUpdate);
   });
+  fields.style.addEventListener('change', scheduleUpdate);
+  fields.dyn.addEventListener('change', () => {
+    ['p1', 'p2', 'p3'].forEach(k => { fields[k].value = ''; });
+    const T = DYN[fields.dyn.value];
+    if (T && T.logo !== undefined && !fields.logo.value.trim()) fields.logo.value = T.logo;
+    applyDynFields();
+    scheduleUpdate();
+  });
+  $('colorOn').addEventListener('change', scheduleUpdate);
   for (const [k, pk] of Object.entries(pickers)) {
     pk.addEventListener('input', () => {
       fields[k].value = pk.value;
+      if (k === 'messageColor' && kind === 'dynamic') $('colorOn').checked = true;
       validate();
       scheduleUpdate();
     });
   }
   $('form').addEventListener('submit', e => e.preventDefault());
+  qsa('#kindSeg button').forEach(b => b.addEventListener('click', () => setKind(b.dataset.kind)));
+
+  // иконки
+  $('iconBtn').addEventListener('click', () => {
+    const open = $('iconPanel').hidden;
+    $('iconPanel').hidden = !open;
+    $('iconBtn').setAttribute('aria-expanded', String(open));
+    if (open) { buildIcons(); $('iconSearch').focus(); }
+  });
+  $('iconSearch').addEventListener('input', filterIcons);
+  $('brandBtn').addEventListener('click', () => {
+    const slug = fields.logo.value.trim().toLowerCase();
+    const col = BRAND[slug];
+    if (!col) { toast(t('brand_none')); return; }
+    fields.messageColor.value = col;
+    fields.logoColor.value = lum(col) > 0.6 ? '#000000' : '#ffffff';
+    if (kind === 'dynamic') $('colorOn').checked = true;
+    syncPickers(); validate(); scheduleUpdate();
+    toast(t('brand_ok'));
+  });
+
+  // масштаб
+  $('zoom').addEventListener('input', e => { prefs.zoom = Number(e.target.value) || 1; savePrefs(); applyZoom(); });
 
   // табы
-  const tabBtns = [...document.querySelectorAll('[role=tab]')];
+  const tabBtns = qsa('[role=tab]');
   function selectTab(name, focus) {
-    tab = name;
+    prefs.fmt = name;
     tabBtns.forEach(b => {
       const on = b.dataset.tab === name;
       b.setAttribute('aria-selected', String(on));
       b.tabIndex = on ? 0 : -1;
       if (on) { $('panel').setAttribute('aria-labelledby', b.id); if (focus) b.focus(); }
     });
+    savePrefs();
     renderCode();
   }
   tabBtns.forEach((b, i) => {
@@ -630,67 +1269,171 @@
       selectTab(tabBtns[n].dataset.tab, true);
     });
   });
-  $('wrapLink').addEventListener('change', renderCode);
+  function selectScope(s) {
+    prefs.scope = s;
+    qsa('#scopeSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scope === s)));
+    savePrefs(); renderCode(); renderMock();
+  }
+  qsa('#scopeSeg button').forEach(b => b.addEventListener('click', () => selectScope(b.dataset.scope)));
+  $('layout').addEventListener('change', e => { prefs.layout = e.target.value; savePrefs(); renderCode(); renderMock(); });
+  $('wrapLink').addEventListener('change', e => { prefs.wrap = e.target.checked; savePrefs(); renderCode(); });
+  function selectMock(m) {
+    prefs.mock = m;
+    qsa('#mockSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mock === m)));
+    savePrefs(); renderMock();
+  }
+  qsa('#mockSeg button').forEach(b => b.addEventListener('click', () => selectMock(b.dataset.mock)));
 
   // copy
-  $('copyBtn').addEventListener('click', async () => {
-    clearTimeout(debounceTimer);
-    update(); // гарантируем актуальность
+  let copyTimer;
+  async function doCopy() {
+    flush();
     const ok = await copyText($('code').textContent);
-    toast(ok ? 'Скопировано' : 'Не удалось скопировать');
-    if (ok) saveHistory(current);
+    toast(ok ? t('copied') : t('copy_fail'));
+    if (ok) {
+      saveHistory(current);
+      const b = $('copyBtn'); b.textContent = '✓ Copied';
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => { b.textContent = '📋 Copy'; }, 1200);
+    }
+  }
+  $('copyBtn').addEventListener('click', doCopy);
+  $('code').addEventListener('click', () => { if (!String(getSelection()).length) doCopy(); });
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doCopy(); }
+    else if (e.key === 'Escape' && !$('iconPanel').hidden) { $('iconBtn').click(); $('iconBtn').focus(); }
   });
 
   // share
   $('shareBtn').addEventListener('click', async () => {
-    clearTimeout(debounceTimer);
-    update();
+    flush();
     const url = shareUrl(current);
     const ok = await copyText(url);
-    toast(ok ? 'Ссылка скопирована' : 'Не удалось скопировать ссылку');
+    toast(ok ? t('link_copied') : t('link_fail'));
     try { history.replaceState(null, '', url); } catch { /* file:// в некоторых браузерах */ }
     saveHistory(current);
   });
-
-  $('saveBtn').addEventListener('click', () => {
-    clearTimeout(debounceTimer);
-    update();
-    saveHistory(current);
-    toast('Сохранено в историю');
-  });
-
+  $('saveBtn').addEventListener('click', () => { flush(); saveHistory(current); toast(t('saved')); });
   $('resetBtn').addEventListener('click', () => {
-    writeForm(DEFAULTS);
-    update();
+    sel = -1;
+    writeForm(DEFAULTS); flush(); refreshBoardDeps();
     try { history.replaceState(null, '', location.href.split('?')[0].split('#')[0]); } catch { /* ignore */ }
-    toast('Сброшено');
+    toast(t('done_reset'));
   });
 
-  $('clearHist').addEventListener('click', () => {
-    lsSet(LS.history, []);
-    renderHistory();
+  // случайный
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  $('randBtn').addEventListener('click', () => {
+    const col = pick(SWATCHES)[1];
+    fields.messageColor.value = col;
+    fields.labelColor.value = pick(['#555555', '#333333', '#1f2937', '#4b5563', '#0f172a']);
+    fields.style.value = pick(STYLES);
+    if (kind === 'dynamic') { $('colorOn').checked = true; fields.dyn.value = pick(DYN_IDS); applyDynFields(); }
+    else { const pr = pick(PRESETS).cfg; fields.label.value = pr.label; fields.message.value = pr.message; }
+    const slug = pick(ICON_SLUGS);
+    fields.logo.value = slug;
+    fields.logoColor.value = '#ffffff';
+    syncPickers(); validate(); flush();
+    toast(t('rand_done'));
   });
 
-  // тема
-  function applyTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    $('themeBtn').textContent = t === 'dark' ? '☀️ Тема' : '🌙 Тема';
+  // набор: кнопки
+  $('addBtn').addEventListener('click', () => {
+    flush();
+    if (boardAdd([current])) { sel = board.length - 1; refreshBoardDeps(); toast(t('added')); }
+  });
+  $('updBtn').addEventListener('click', () => {
+    flush();
+    if (sel >= 0 && sel < board.length) { board[sel] = sanitize(current); saveBoard(); refreshBoardDeps(); toast(t('updated')); }
+  });
+  $('clearBoard').addEventListener('click', () => { board = []; sel = -1; saveBoard(); refreshBoardDeps(); });
+
+  // история
+  $('clearHist').addEventListener('click', () => { lsSet(LS.history, []); renderHistory(); });
+  $('expBtn').addEventListener('click', () => {
+    const data = { app: 'readme-badges', version: 2, board: board.map(compact), history: getHistory().map(compact) };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const a = el('a', { href: url, download: 'badges.json' });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  $('impBtn').addEventListener('click', () => $('impFile').click());
+  $('impFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(String(r.result));
+        if (!d || typeof d !== 'object') throw new Error('bad');
+        if (Array.isArray(d.board)) board = d.board.slice(0, BOARD_MAX).map(revive);
+        if (Array.isArray(d.history)) lsSet(LS.history, d.history.slice(0, 10).map(x => compact(revive(x))));
+        sel = -1; saveBoard(); renderHistory(); refreshBoardDeps();
+        toast(t('imported'));
+      } catch { toast(t('import_fail')); }
+    };
+    r.onerror = () => toast(t('import_fail'));
+    r.readAsText(f);
+    e.target.value = '';
+  });
+
+  // тема и язык
+  function applyTheme(th) {
+    document.documentElement.setAttribute('data-theme', th);
+    $('themeBtn').textContent = th === 'dark' ? '☀️' : '🌙';
+    if (iconsBuilt) paintIcons();
   }
+  $('themeBtn').addEventListener('click', () => {
+    const th = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(th); lsSet(LS.theme, th);
+  });
+
+  function applyI18n() {
+    document.documentElement.lang = lang;
+    $('langBtn').textContent = lang === 'ru' ? 'EN' : 'RU';
+    qsa('[data-i18n]').forEach(n => { n.textContent = t(n.dataset.i18n); });
+    qsa('[data-i18n-ph]').forEach(n => { n.placeholder = t(n.dataset.i18nPh); });
+    qsa('[data-i18n-title]').forEach(n => { n.title = t(n.dataset.i18nTitle); n.setAttribute('aria-label', n.title); });
+    $('swatches').setAttribute('aria-label', 'shields.io colors');
+    qsa('#swatches .sw').forEach(b => { b.title = t('sw_title', b.dataset.name); b.setAttribute('aria-label', b.title); });
+    renderKits();
+    applyDynFields();
+    renderHistory();
+    renderBoard();
+    if (current) renderStages();
+  }
+  $('langBtn').addEventListener('click', () => {
+    lang = lang === 'ru' ? 'en' : 'ru';
+    lsSet(LS.lang, lang);
+    applyI18n();
+  });
+
+  /* =====================================================================
+   *  Старт: URL > localStorage > дефолты
+   * ===================================================================== */
+  const savedLang = lsGet(LS.lang, null);
+  lang = savedLang === 'en' || savedLang === 'ru' ? savedLang
+    : (/^ru\b/i.test(navigator.language || '') ? 'ru' : 'en');
   const savedTheme = lsGet(LS.theme, null);
   applyTheme(savedTheme === 'dark' || savedTheme === 'light'
     ? savedTheme
     : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-  $('themeBtn').addEventListener('click', () => {
-    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    applyTheme(t);
-    lsSet(LS.theme, t);
-  });
 
-  /* ---------- Старт: URL > localStorage > дефолты ---------- */
-  const fromUrl = configFromQuery(location.search);
-  writeForm(fromUrl || sanitize(lsGet(LS.state, DEFAULTS)));
+  const fromUrl = stateFromQuery(location.search);
+  const lsBoard = lsGet(LS.board, []);
+  board = fromUrl.brd || (Array.isArray(lsBoard) ? lsBoard.slice(0, BOARD_MAX).map(revive) : []);
+  if (fromUrl.brd) saveBoard();
+  writeForm(fromUrl.cfg || revive(lsGet(LS.state, {})));
+  if (fromUrl.brd && fromUrl.brd.length) prefs.scope = 'board';
+
+  $('layout').value = prefs.layout;
+  $('wrapLink').checked = !!prefs.wrap;
+  selectTab(prefs.fmt);
+  selectScope(prefs.scope);
+  selectMock(prefs.mock);
   update();
-  renderHistory();
+  refreshBoardDeps();
+  applyI18n();
 })();
 </script>
 </body>
