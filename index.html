@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>README Badge Generator</title>
+<meta name="description" content="Интерактивный генератор бейджей shields.io для README на GitHub">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 16l5 5 11-11' stroke='white' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --fg: #1f2328;
+    --muted: #6a737d;
+    --card: #ffffff;
+    --accent: #2563eb;
+    --accent-fg: #ffffff;
+    --border: #d8dce2;
+    --input-bg: #ffffff;
+    --danger: #d1242f;
+    --shadow: 0 2px 10px rgba(20, 30, 50, .08);
+    --stage-light: #ffffff;
+    --stage-dark: #0d1117;
+    --radius: 8px;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1216;
+    --fg: #e6e9ee;
+    --muted: #9aa4b2;
+    --card: #181c22;
+    --accent: #5b9dff;
+    --accent-fg: #0b1220;
+    --border: #2d343d;
+    --input-bg: #11151a;
+    --danger: #ff7b72;
+    --shadow: 0 2px 12px rgba(0, 0, 0, .45);
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light; }
+  [data-theme="dark"] { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    transition: background .2s, color .2s;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 16px;
+  }
+  header h1 { font-size: 1.3rem; margin: 0; overflow-wrap: anywhere; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    min-width: 0;
+  }
+  .card h2 { font-size: 1rem; margin: 0 0 12px; }
+  .card + .card { margin-top: 16px; }
+  .field { margin-bottom: 12px; min-width: 0; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label.lbl { display: block; font-size: .8rem; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
+  input[type=text], input[type=url], select {
+    width: 100%; min-width: 0;
+    padding: 8px 10px;
+    font: inherit;
+    color: var(--fg);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  input.invalid { border-color: var(--danger); }
+  input:focus-visible, select:focus-visible, button:focus-visible, [role=tab]:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  .color { display: flex; gap: 6px; align-items: stretch; }
+  .color input[type=color] {
+    flex: 0 0 42px; width: 42px; padding: 2px; height: auto;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--input-bg); cursor: pointer;
+  }
+  .color input[type=text] { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .hint { font-size: .75rem; color: var(--muted); margin-top: 3px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit; cursor: pointer;
+    padding: 7px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--fg);
+    transition: background .15s, border-color .15s;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); }
+  button.small { padding: 4px 10px; font-size: .8rem; }
+  .sep { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+  .stage {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 84px; padding: 16px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: auto; margin-bottom: 10px;
+  }
+  .stage.light { background: var(--stage-light); }
+  .stage.dark { background: var(--stage-dark); }
+  .stage .tag { position: absolute; }
+  .stage img { max-width: none; }
+  .fallback {
+    font-size: .85rem; padding: 4px 10px; border-radius: 6px;
+    background: #fff3cd; color: #7a5b00; border: 1px solid #ecd58a;
+  }
+  .stage-label { font-size: .72rem; color: var(--muted); margin: 0 0 4px; text-transform: uppercase; letter-spacing: .05em; }
+  [role=tablist] { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; flex-wrap: wrap; }
+  [role=tab] {
+    border: 1px solid transparent; border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0;
+    background: transparent; padding: 6px 14px; color: var(--muted); font-weight: 600;
+  }
+  [role=tab][aria-selected=true] { background: var(--input-bg); border-color: var(--border); color: var(--accent); }
+  .code-box { position: relative; }
+  pre.code {
+    margin: 0; padding: 12px; padding-right: 12px;
+    background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius);
+    font: .82rem/1.5 ui-monospace, Menlo, Consolas, monospace;
+    white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all;
+    min-height: 60px; max-height: 240px; overflow: auto;
+  }
+  .code-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .wrapopt { font-size: .85rem; display: flex; gap: 6px; align-items: center; }
+  .wrapopt[hidden] { display: none; }
+  .history { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .history li { min-width: 0; }
+  .history button {
+    width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    text-align: left; padding: 8px 10px; min-width: 0;
+  }
+  .history .hi-img { min-height: 20px; max-width: 100%; overflow: hidden; }
+  .history .hi-txt { font-size: .75rem; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { color: var(--muted); font-size: .9rem; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .card-head h2 { margin: 0; }
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px);
+    background: #1f2328; color: #fff; padding: 9px 18px; border-radius: var(--radius);
+    box-shadow: 0 6px 20px rgba(0,0,0,.3); opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 10; max-width: calc(100vw - 32px); text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 420px) {
+    .wrap { padding: 10px; }
+    .card { padding: 12px; }
+    .row { grid-template-columns: 1fr; gap: 0; }
+    header p { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🏷️ README Badge Generator</h1>
+      <p>Настройте бейдж shields.io и скопируйте код для README</p>
+    </div>
+    <button id="themeBtn" type="button" aria-label="Переключить тему" title="Переключить тему">🌙 Тема</button>
+  </header>
+
+  <main class="grid">
+    <!-- ФОРМА -->
+    <section class="card" aria-label="Настройки бейджа">
+      <h2>Настройки</h2>
+      <form id="form" autocomplete="off" novalidate>
+        <div class="row">
+          <div class="field">
+            <label class="lbl" for="label">Label</label>
+            <input type="text" id="label" maxlength="100">
+          </div>
+          <div class="field">
+            <label class="lbl" for="message">Message</label>
+            <input type="text" id="message" maxlength="100">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label class="lbl" for="labelColor">Label Color</label>
+            <div class="color">
+              <input type="color" id="labelColorPick" aria-label="Выбор цвета label">
+              <input type="text" id="labelColor" maxlength="30" spellcheck="false" placeholder="#555555">
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl" for="messageColor">Message Color</label>
+            <div class="color">
+              <input type="color" id="messageColorPick" aria-label="Выбор цвета message">
+              <input type="text" id="messageColor" maxlength="30" spellcheck="false" placeholder="#4c1">
+            </div>
+          </div>
+        </div>
+        <div class="hint" style="margin:-6px 0 12px">Hex (<code>#4c1</code>) или имя цвета (<code>blue</code>, <code>success</code>).</div>
+
+        <div class="row">
+          <div class="field">
+            <label class="lbl" for="style">Style</label>
+            <select id="style">
+              <option value="flat">flat</option>
+              <option value="flat-square">flat-square</option>
+              <option value="plastic">plastic</option>
+              <option value="for-the-badge">for-the-badge</option>
+              <option value="social">social</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="lbl" for="logo">Logo (Simple Icons slug)</label>
+            <input type="text" id="logo" list="logos" maxlength="60" spellcheck="false" placeholder="github">
+            <datalist id="logos"></datalist>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="logoColor">Logo Color</label>
+          <div class="color">
+            <input type="color" id="logoColorPick" aria-label="Выбор цвета логотипа">
+            <input type="text" id="logoColor" maxlength="30" spellcheck="false" placeholder="#ffffff">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="labelLink">Label Link</label>
+          <input type="url" id="labelLink" maxlength="500" placeholder="https://github.com/user/repo" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="lbl" for="messageLink">Message Link</label>
+          <input type="url" id="messageLink" maxlength="500" placeholder="https://github.com/user/repo/actions" spellcheck="false">
+          <div class="hint">Допускаются только http(s)-ссылки. Если заданы обе, в обёртке используется Message Link.</div>
+        </div>
+      </form>
+
+      <hr class="sep">
+      <h2>Пресеты</h2>
+      <div class="btns" id="presets"></div>
+
+      <hr class="sep">
+      <div class="btns">
+        <button type="button" id="resetBtn">↺ Сброс</button>
+        <button type="button" id="shareBtn" class="primary">🔗 Скопировать ссылку</button>
+        <button type="button" id="saveBtn">💾 В историю</button>
+      </div>
+    </section>
+
+    <!-- ПРЕВЬЮ + ЭКСПОРТ -->
+    <section aria-label="Превью и экспорт" style="min-width:0">
+      <div class="card">
+        <h2>Превью</h2>
+        <p class="stage-label">Светлый фон</p>
+        <div class="stage light" id="stageLight" aria-live="polite"></div>
+        <p class="stage-label">Тёмный фон</p>
+        <div class="stage dark" id="stageDark"></div>
+      </div>
+
+      <div class="card">
+        <h2>Код</h2>
+        <div role="tablist" aria-label="Формат экспорта" id="tabs">
+          <button role="tab" type="button" id="tab-md" data-tab="md" aria-selected="true" aria-controls="panel">Markdown</button>
+          <button role="tab" type="button" id="tab-html" data-tab="html" aria-selected="false" aria-controls="panel" tabindex="-1">HTML</button>
+          <button role="tab" type="button" id="tab-url" data-tab="url" aria-selected="false" aria-controls="panel" tabindex="-1">URL</button>
+        </div>
+        <div class="code-box" id="panel" role="tabpanel" aria-labelledby="tab-md">
+          <pre class="code" id="code" tabindex="0"></pre>
+        </div>
+        <div class="code-actions">
+          <label class="wrapopt" id="wrapOpt" hidden>
+            <input type="checkbox" id="wrapLink" checked> Обернуть в ссылку
+          </label>
+          <button type="button" id="copyBtn" class="primary">📋 Copy</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="card" style="margin-top:16px" aria-label="История">
+    <div class="card-head">
+      <h2>История (последние 10)</h2>
+      <button type="button" id="clearHist" class="small">Очистить</button>
+    </div>
+    <ul class="history" id="history"></ul>
+    <p class="empty" id="histEmpty">Пока пусто. Конфиги сохраняются при копировании кода или по кнопке «В историю».</p>
+  </section>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Эталонные функции ---------- */
+  function esc(s) {
+    return String(s).replace(/-/g, '--').replace(/_/g, '__');
+  }
+
+  function buildUrl(c) {
+    const base = 'https://img.shields.io/badge/';
+    const label = encodeURIComponent(esc(c.label));
+    const message = encodeURIComponent(esc(c.message));
+    const color = encodeURIComponent((c.messageColor || 'blue').replace('#', ''));
+    const p = new URLSearchParams();
+    if (c.style && c.style !== 'flat') p.set('style', c.style);
+    if (c.logo) p.set('logo', c.logo);
+    if (c.logo && c.logoColor) p.set('logoColor', c.logoColor.replace('#', ''));
+    if (c.labelColor) p.set('labelColor', c.labelColor.replace('#', ''));
+    const q = p.toString();
+    // Пустой label → двухчастная форма /badge/<message>-<color>
+    let path;
+    if (!String(c.label).trim()) path = `${message || '%20'}-${color}`;
+    else if (!String(c.message).trim()) path = `${label}-%20-${color}`;
+    else path = `${label}-${message}-${color}`;
+    return `${base}${path}${q ? '?' + q : ''}`;
+  }
+
+  // Экранирование для вставки в разметку (защита сгенерированного кода)
+  const escAttr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const escMdAlt = s => String(s).replace(/([\\\[\]])/g, '\\$1');
+  const safeLink = u => { // только http(s)
+    u = String(u || '').trim();
+    if (!u) return '';
+    try {
+      const x = new URL(u);
+      return (x.protocol === 'http:' || x.protocol === 'https:') ? u.replace(/\)/g, '%29').replace(/\s/g, '%20') : '';
+    } catch { return ''; }
+  };
+  const altOf = c => `${c.label} ${c.message}`.trim();
+  const targetOf = c => safeLink(c.messageLink) || safeLink(c.labelLink);
+
+  function toMarkdown(c, wrap = true) {
+    const img = `![${escMdAlt(altOf(c))}](${buildUrl(c)})`;
+    const target = targetOf(c);
+    return (wrap && target) ? `[${img}](${target})` : img;
+  }
+
+  function toHtml(c, wrap = true) {
+    const img = `<img src="${escAttr(buildUrl(c))}" alt="${escAttr(altOf(c))}">`;
+    const target = targetOf(c);
+    return (wrap && target) ? `<a href="${escAttr(target)}">${img}</a>` : img;
+  }
+
+  /* ---------- Константы ---------- */
+  const DEFAULTS = Object.freeze({
+    label: 'build', message: 'passing',
+    labelColor: '#555555', messageColor: '#4c1',
+    style: 'flat', logo: '', logoColor: '#ffffff',
+    labelLink: '', messageLink: ''
+  });
+  const KEYS = Object.keys(DEFAULTS);
+  const PARAM = { label: 'l', message: 'm', labelColor: 'lc', messageColor: 'mc', style: 's', logo: 'lg', logoColor: 'lgc', labelLink: 'll', messageLink: 'ml' };
+  const STYLES = ['flat', 'flat-square', 'plastic', 'for-the-badge', 'social'];
+  const LS = { theme: 'rb.theme', history: 'rb.history', state: 'rb.state' };
+  const PRESETS = [
+    { name: 'Build Status', cfg: { label: 'build', message: 'passing', messageColor: '#4c1', logo: 'githubactions' } },
+    { name: 'License MIT', cfg: { label: 'license', message: 'MIT', messageColor: 'blue', logo: '' } },
+    { name: 'Version', cfg: { label: 'version', message: 'v1.0.0', messageColor: '#007ec6', logo: 'semver' } },
+    { name: 'Downloads', cfg: { label: 'downloads', message: '10k/month', messageColor: '#2ea44f', logo: 'npm' } },
+    { name: 'Made with ❤', cfg: { label: 'made with', message: '❤', messageColor: '#e25555', logo: '' } }
+  ];
+  const LOGOS = ['github', 'githubactions', 'gitlab', 'git', 'npm', 'yarn', 'pnpm', 'nodedotjs', 'deno', 'bun', 'javascript', 'typescript',
+    'python', 'rust', 'go', 'java', 'kotlin', 'swift', 'php', 'ruby', 'csharp', 'cplusplus', 'c', 'html5', 'css3', 'react', 'vuedotjs',
+    'angular', 'svelte', 'nextdotjs', 'docker', 'kubernetes', 'linux', 'apple', 'windows', 'android', 'discord', 'telegram', 'twitter',
+    'x', 'youtube', 'linkedin', 'visualstudiocode', 'semver', 'pypi', 'codecov', 'travisci', 'circleci', 'vercel', 'netlify', 'firebase'];
+
+  /* ---------- Утилиты ---------- */
+  const $ = id => document.getElementById(id);
+  const el = (tag, props = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') n.className = v; else n[k] = v;
+    }
+    kids.forEach(k => n.append(k));
+    return n;
+  };
+  const lsGet = (k, fb) => { try { const v = localStorage.getItem(k); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* приватный режим / квота */ } };
+
+  function sanitize(obj) {
+    const c = { ...DEFAULTS };
+    if (obj && typeof obj === 'object') {
+      for (const k of KEYS) if (typeof obj[k] === 'string') c[k] = obj[k];
+    }
+    if (!STYLES.includes(c.style)) c.style = 'flat';
+    return c;
+  }
+
+  const HEX = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const COLOR_OK = v => !v || HEX.test(v) || /^[a-z]+$/i.test(v);
+  function toPickerHex(v) {
+    const m = HEX.exec(String(v).trim());
+    if (!m) return null;
+    let h = m[1];
+    if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+    return '#' + h.toLowerCase();
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext !== false) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch { /* fallthrough */ }
+    const ta = el('textarea', { value: text });
+    ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+    document.body.append(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    ta.remove();
+    return ok;
+  }
+
+  /* ---------- Состояние формы ---------- */
+  const fields = {};
+  KEYS.forEach(k => { fields[k] = $(k); });
+  const pickers = { labelColor: $('labelColorPick'), messageColor: $('messageColorPick'), logoColor: $('logoColorPick') };
+
+  function readForm() {
+    const c = {};
+    KEYS.forEach(k => { c[k] = fields[k].value.trim(); });
+    // пробелы внутри label/message важны, но крайние — нет
+    return sanitize(c);
+  }
+
+  function writeForm(cfg) {
+    const c = sanitize(cfg);
+    KEYS.forEach(k => { fields[k].value = c[k]; });
+    syncPickers();
+    validate();
+  }
+
+  function syncPickers() {
+    for (const k of Object.keys(pickers)) {
+      const hex = toPickerHex(fields[k].value);
+      if (hex) pickers[k].value = hex;
+    }
+  }
+
+  function validate() {
+    for (const k of ['labelColor', 'messageColor', 'logoColor']) {
+      fields[k].classList.toggle('invalid', !COLOR_OK(fields[k].value.trim()));
+    }
+    for (const k of ['labelLink', 'messageLink']) {
+      const v = fields[k].value.trim();
+      fields[k].classList.toggle('invalid', !!v && !safeLink(v));
+    }
+  }
+
+  /* ---------- Превью ---------- */
+  function renderBadge(stage, url, alt) {
+    stage.textContent = '';
+    const img = el('img', { alt, decoding: 'async' });
+    img.addEventListener('error', () => {
+      stage.textContent = '';
+      stage.append(el('span', { class: 'fallback', textContent: '⚠ Не удалось загрузить' }));
+    }, { once: true });
+    img.src = url;
+    stage.append(img);
+  }
+
+  let tab = 'md';
+  let current = { ...DEFAULTS };
+
+  function renderCode() {
+    const c = current;
+    const hasLink = !!targetOf(c);
+    $('wrapOpt').hidden = !hasLink;
+    const wrap = $('wrapLink').checked;
+    let out;
+    if (tab === 'md') out = toMarkdown(c, wrap);
+    else if (tab === 'html') out = toHtml(c, wrap);
+    else out = buildUrl(c);
+    $('code').textContent = out;
+    return out;
+  }
+
+  function update() {
+    current = readForm();
+    validate();
+    const url = buildUrl(current);
+    const alt = altOf(current);
+    renderBadge($('stageLight'), url, alt);
+    renderBadge($('stageDark'), url, alt);
+    renderCode();
+    lsSet(LS.state, current);
+  }
+
+  let debounceTimer;
+  function scheduleUpdate() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(update, 150);
+  }
+
+  /* ---------- История ---------- */
+  const sameCfg = (a, b) => KEYS.every(k => a[k] === b[k]);
+
+  function saveHistory(cfg) {
+    let h = lsGet(LS.history, []);
+    if (!Array.isArray(h)) h = [];
+    h = h.map(sanitize).filter(x => !sameCfg(x, cfg));
+    h.unshift(sanitize(cfg));
+    h = h.slice(0, 10);
+    lsSet(LS.history, h);
+    renderHistory();
+  }
+
+  function renderHistory() {
+    let h = lsGet(LS.history, []);
+    if (!Array.isArray(h)) h = [];
+    h = h.slice(0, 10).map(sanitize);
+    const ul = $('history');
+    ul.textContent = '';
+    $('histEmpty').hidden = h.length > 0;
+    $('clearHist').hidden = h.length === 0;
+    h.forEach(cfg => {
+      const img = el('img', { alt: altOf(cfg), loading: 'lazy' });
+      img.addEventListener('error', () => { img.replaceWith(el('span', { class: 'hi-txt', textContent: '⚠ Не удалось загрузить' })); }, { once: true });
+      img.src = buildUrl(cfg);
+      const btn = el('button', { type: 'button', title: 'Восстановить конфиг' },
+        el('span', { class: 'hi-img' }, img),
+        el('span', { class: 'hi-txt', textContent: `${cfg.label} | ${cfg.message} | ${cfg.style}` }));
+      btn.addEventListener('click', () => {
+        writeForm(cfg);
+        update();
+        toast('Конфиг восстановлен');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      ul.append(el('li', {}, btn));
+    });
+  }
+
+  /* ---------- Share / URL params ---------- */
+  function configToQuery(cfg) {
+    const p = new URLSearchParams();
+    KEYS.forEach(k => { if (cfg[k] !== DEFAULTS[k]) p.set(PARAM[k], cfg[k]); });
+    return p.toString();
+  }
+
+  function configFromQuery(search) {
+    const p = new URLSearchParams(search);
+    const o = {};
+    let found = false;
+    KEYS.forEach(k => {
+      if (p.has(PARAM[k])) { o[k] = p.get(PARAM[k]); found = true; }
+    });
+    return found ? sanitize({ ...DEFAULTS, ...o }) : null;
+  }
+
+  function shareUrl(cfg) {
+    const q = configToQuery(cfg);
+    const base = location.href.split('#')[0].split('?')[0];
+    return q ? `${base}?${q}` : base;
+  }
+
+  /* ---------- Инициализация UI ---------- */
+  // datalist
+  const dl = $('logos');
+  LOGOS.forEach(s => dl.append(el('option', { value: s })));
+
+  // пресеты
+  PRESETS.forEach(p => {
+    const b = el('button', { type: 'button', textContent: p.name });
+    b.addEventListener('click', () => {
+      writeForm({ ...DEFAULTS, ...p.cfg });
+      update();
+      toast(`Пресет: ${p.name}`);
+    });
+    $('presets').append(b);
+  });
+
+  // поля
+  KEYS.forEach(k => {
+    fields[k].addEventListener('input', () => {
+      if (pickers[k]) { const hex = toPickerHex(fields[k].value); if (hex) pickers[k].value = hex; }
+      validate();
+      scheduleUpdate();
+    });
+    if (k === 'style') fields[k].addEventListener('change', scheduleUpdate);
+  });
+  for (const [k, pk] of Object.entries(pickers)) {
+    pk.addEventListener('input', () => {
+      fields[k].value = pk.value;
+      validate();
+      scheduleUpdate();
+    });
+  }
+  $('form').addEventListener('submit', e => e.preventDefault());
+
+  // табы
+  const tabBtns = [...document.querySelectorAll('[role=tab]')];
+  function selectTab(name, focus) {
+    tab = name;
+    tabBtns.forEach(b => {
+      const on = b.dataset.tab === name;
+      b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+      if (on) { $('panel').setAttribute('aria-labelledby', b.id); if (focus) b.focus(); }
+    });
+    renderCode();
+  }
+  tabBtns.forEach((b, i) => {
+    b.addEventListener('click', () => selectTab(b.dataset.tab));
+    b.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const n = (i + (e.key === 'ArrowRight' ? 1 : -1) + tabBtns.length) % tabBtns.length;
+      selectTab(tabBtns[n].dataset.tab, true);
+    });
+  });
+  $('wrapLink').addEventListener('change', renderCode);
+
+  // copy
+  $('copyBtn').addEventListener('click', async () => {
+    clearTimeout(debounceTimer);
+    update(); // гарантируем актуальность
+    const ok = await copyText($('code').textContent);
+    toast(ok ? 'Скопировано' : 'Не удалось скопировать');
+    if (ok) saveHistory(current);
+  });
+
+  // share
+  $('shareBtn').addEventListener('click', async () => {
+    clearTimeout(debounceTimer);
+    update();
+    const url = shareUrl(current);
+    const ok = await copyText(url);
+    toast(ok ? 'Ссылка скопирована' : 'Не удалось скопировать ссылку');
+    try { history.replaceState(null, '', url); } catch { /* file:// в некоторых браузерах */ }
+    saveHistory(current);
+  });
+
+  $('saveBtn').addEventListener('click', () => {
+    clearTimeout(debounceTimer);
+    update();
+    saveHistory(current);
+    toast('Сохранено в историю');
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    writeForm(DEFAULTS);
+    update();
+    try { history.replaceState(null, '', location.href.split('?')[0].split('#')[0]); } catch { /* ignore */ }
+    toast('Сброшено');
+  });
+
+  $('clearHist').addEventListener('click', () => {
+    lsSet(LS.history, []);
+    renderHistory();
+  });
+
+  // тема
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    $('themeBtn').textContent = t === 'dark' ? '☀️ Тема' : '🌙 Тема';
+  }
+  const savedTheme = lsGet(LS.theme, null);
+  applyTheme(savedTheme === 'dark' || savedTheme === 'light'
+    ? savedTheme
+    : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  $('themeBtn').addEventListener('click', () => {
+    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(t);
+    lsSet(LS.theme, t);
+  });
+
+  /* ---------- Старт: URL > localStorage > дефолты ---------- */
+  const fromUrl = configFromQuery(location.search);
+  writeForm(fromUrl || sanitize(lsGet(LS.state, DEFAULTS)));
+  update();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
